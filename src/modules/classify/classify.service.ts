@@ -1,9 +1,10 @@
 // third-party libraries
 import axios from "axios";
+import httpStatus from "http-status";
 
 // utility functions
-import logger from "../../utils/logger";
 import { getConfidence } from "../../utils/nameUtil";
+import { AppError } from "../../utils/appError";
 
 // interface
 import { GenderizeResponse } from "./classify.interface";
@@ -23,8 +24,16 @@ const classifyService = {
   async predictGender(name: string) {
     const apiUrl = `${GENDERIZE_URL}?name=${name}`;
     try {
-      const processed_at = new Date().toISOString();
       const { data } = await axios.get<GenderizeResponse>(apiUrl);
+      const processed_at = new Date().toISOString();
+
+      //handle edge casess
+      if (!data.gender || data.count === 0) {
+        throw new AppError(
+          "No prediction available for the provided name",
+          httpStatus.UNPROCESSABLE_ENTITY
+        );
+      }
       const is_confident: boolean = getConfidence(
         data.probability,
         data.count
@@ -37,10 +46,33 @@ const classifyService = {
         is_confident,
         processed_at
       }
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "An unknown error occurred";
-      logger.error(`Error occurred while fetching gender data: ${errorMsg}`);
-      throw new Error(`${errorMsg}`)
+    } catch (error: any) {
+      if (error.response) {
+        throw new AppError(
+          "Upstream service error",
+          httpStatus.BAD_GATEWAY
+        );
+      }
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      //handle axios error
+      if (error.response) {
+        throw new AppError(
+          "Upstream service error",
+          httpStatus.BAD_GATEWAY
+        );
+      }
+
+      const errorMsg =
+        error instanceof Error
+          ? error.message
+          : "Internal Server Error";
+      throw new AppError(
+        errorMsg,
+        httpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 }
