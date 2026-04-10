@@ -2,8 +2,14 @@
 import { Request, Response } from "express";
 import httpStatus from "http-status";
 
-// utility functions
-import logger from "../../utils/logger";
+// service import
+import classifyService from "./classify.service";
+
+// middleware
+import { sendResponse } from "../../middlewares/responseHandler";
+
+// utils import
+import { AppError } from "../../utils/appError";
 
 // controller
 const classifyCtrl = {
@@ -13,22 +19,30 @@ const classifyCtrl = {
    * @param res 
    * @returns 
    */
-  async classifyName(req: Request, res: Response): Promise<Response> {
+  async predictGender(req: Request, res: Response): Promise<Response> {
     const { name } = req.query as { name: string };
-    try {
-      return res
-        .status(httpStatus.OK)
-        .send({
-          message: "Classify endpoint is active"
-        });
-    } catch (error: any) {
-      logger.error(`An error occurred while classifying the name: ${error.message}`);
-      return res
-        .status(httpStatus.INTERNAL_SERVER_ERROR)
-        .send({
-          message: `An error occurred while classifying the name: ${error.message}`
-        });
+    if (!name) {
+      throw new AppError(
+        "Name query parameter is required",
+        httpStatus.BAD_REQUEST
+      );
+    };
+    if (
+      typeof name === "string"
+      && name.trim() !== ""
+      && !isNaN(Number(name))) {
+      throw new AppError(
+        "Name query parameter must be a string",
+        httpStatus.UNPROCESSABLE_ENTITY
+      );
     }
+    const formattedName = name.trim().toLowerCase();
+    const result = await classifyService.predictGender(formattedName);
+    return sendResponse(
+      res,
+      httpStatus.OK,
+      result
+    );
   }
 };
 
