@@ -5,6 +5,9 @@ import httpStatus from "http-status";
 // utility functions
 import logger from "../../utils/logger";
 
+// service import
+import classifyService from "./classify.service";
+
 // controller
 const classifyCtrl = {
   /**
@@ -13,13 +16,16 @@ const classifyCtrl = {
    * @param res 
    * @returns 
    */
-  async classifyName(req: Request, res: Response): Promise<Response> {
+  async predictGender(req: Request, res: Response): Promise<Response> {
     const { name } = req.query as { name: string };
     try {
+      const result = await classifyService.predictGender(name);
       return res
         .status(httpStatus.OK)
         .send({
-          message: "Classify endpoint is active"
+          status: "success",
+          message: "Classify endpoint is active",
+          data: result
         });
     } catch (error: any) {
       logger.error(`An error occurred while classifying the name: ${error.message}`);

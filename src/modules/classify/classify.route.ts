@@ -7,6 +7,6 @@ const classifyRouter = Router();
 
 classifyRouter
   .route("/")
-  .get(classifyCtrl.classifyName)
+  .get(classifyCtrl.predictGender);
 
 export default classifyRouter;
