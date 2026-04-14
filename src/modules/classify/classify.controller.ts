@@ -17,7 +17,7 @@ const classifyCtrl = {
    * @description classifies name as male, female
    * @param req 
    * @param res 
-   * @returns 
+   * @returns
    */
   async predictGender(req: Request, res: Response): Promise<Response> {
     const { name } = req.query as { name: string };

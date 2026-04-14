@@ -20,11 +20,8 @@ app.disable("x-powered-by");
 app.use(urlencoded({ extended: true, limit: "10mb" }));
 app.use(json({ limit: "10mb" }));
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    return callback(null, origin);
-  },
-  credentials: true,
+  origin: "*",
+  credentials: false,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
@@ -36,7 +33,6 @@ app.get("/health", (_req, res) => {
     message: "API is healthy"
   });
 });
-
 
 app.use(globalErrorHandler);
 
