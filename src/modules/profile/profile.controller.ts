@@ -19,12 +19,19 @@ const profileCtrl = {
    * @param res 
    * @returns
    */
-  async fetchProfile(req: Request, res: Response): Promise<Response> {
-    // const profiles = await profileService.fetchProfile();
+  async fetchProfiles(req: Request, res: Response): Promise<Response> {
+    const { gender, country_id, age_group } = req.query;
+    const params = {
+      gender,
+      countryId: country_id,
+      ageGroup: age_group
+    }
+    const { data, count } = await profileService.fetchProfiles(params);
     return sendResponse(
       res,
       httpStatus.OK,
-      {}
+      data,
+      count,
     );
   },
 
@@ -45,7 +52,7 @@ const profileCtrl = {
     return sendResponse(
       res,
       httpStatus.OK,
-      {}
+
     )
   }
 };
