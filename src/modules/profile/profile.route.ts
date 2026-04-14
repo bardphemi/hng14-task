@@ -11,10 +11,10 @@ import profileCtrl from "./profile.controller";
 const profileRouter = Router();
 
 // route(s)
-profileRouter.post(
-  "/",
-  asyncHandler(profileCtrl.createProfile)
-);
+profileRouter
+  .route("/")
+  .get(asyncHandler(profileCtrl.fetchProfiles))
+  .post(asyncHandler(profileCtrl.createProfile));
 
 export default profileRouter;
 

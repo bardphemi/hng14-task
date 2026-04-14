@@ -1,5 +1,4 @@
 // third-party libraries
-import axios from "axios";
 import httpStatus from "http-status";
 
 // utility functions
