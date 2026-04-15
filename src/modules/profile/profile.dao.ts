@@ -29,12 +29,9 @@ const profileDao = {
         "id",
         "name",
         "gender",
-        "gender_probability",
-        "sample_size",
         "age",
         "age_group",
         "country_id",
-        "country_probability",
         "created_at"
       )
         .limit(FETCH_LIMIT)
