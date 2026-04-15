@@ -8,7 +8,7 @@ import { sendResponse } from "../../middlewares/responseHandler";
 // utils import
 import { AppError } from "../../utils/appError";
 
-// service import 
+//service import 
 import profileService from "./profile.service";
 
 //profile controller
@@ -30,6 +30,7 @@ const profileCtrl = {
     return sendResponse(
       res,
       httpStatus.OK,
+      "Profiles fetched successfully",
       data,
       count,
     );
@@ -45,14 +46,35 @@ const profileCtrl = {
     const { name } = req.body as { name: string };
     if (!name) {
       throw new AppError(
-        "Name parameter is required",
+        "Missing or empty name",
         httpStatus.BAD_REQUEST
       );
     };
+    if (
+      typeof name === "string"
+      && name.trim() !== ""
+      && !isNaN(Number(name))) {
+      throw new AppError(
+        "Invalid type",
+        httpStatus.UNPROCESSABLE_ENTITY
+      );
+    }
+    const formattedName = name.trim().toLowerCase();
+    const existingProfile = await profileService.fetchProfileByName(formattedName);
+    if (existingProfile) {
+      return sendResponse(
+        res,
+        httpStatus.OK,
+        "Profile already exists",
+        existingProfile
+      );
+    }
+    const profile = await profileService.createProfile(formattedName);
     return sendResponse(
       res,
-      httpStatus.OK,
-
+      httpStatus.CREATED,
+      "Profile created successfully",
+      profile
     )
   }
 };

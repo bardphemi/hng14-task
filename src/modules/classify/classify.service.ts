@@ -33,15 +33,15 @@ const classifyService = {
       if (cached && cached.expiry > Date.now()) {
         return cached.value;
       }
-      
+
       const { data } = await axiosInstance.get<GenderizeResponse>(apiUrl);
       const processed_at = new Date().toISOString();
 
       //handle edge casess
       if (!data.gender || data.count === 0) {
         throw new AppError(
-          "No prediction available for the provided name",
-          httpStatus.UNPROCESSABLE_ENTITY
+          "Genderize returned an invalid response",
+          httpStatus.BAD_GATEWAY
         );
       }
       const is_confident: boolean = getConfidence(

@@ -4,6 +4,7 @@ import { Response } from "express";
 // interface 
 interface ApiResponse {
   status: string;
+  message?:string;
   count?: number;
   data?: any;
   errors?: any;
@@ -20,11 +21,13 @@ interface ApiResponse {
 export const sendResponse = (
   res: Response,
   statusCode: number,
+  message?: string,
   data?: any,
   count?: number,
 ) => {
   const response: ApiResponse = {
     status: "success",
+    message,
     data,
   };
   if (count !== undefined) {

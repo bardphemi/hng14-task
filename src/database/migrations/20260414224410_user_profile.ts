@@ -8,7 +8,7 @@ import type { Knex } from "knex";
 export async function up(knex: Knex): Promise<void> {
   await knex.schema.createTable("profiles", (table) => {
     table.uuid("id").primary();
-    table.string("name").notNullable();
+    table.string("name", 255).notNullable().unique(); 
     table.string("gender", 10).notNullable();
     table.decimal("gender_probability", 5, 4).notNullable();
     table.integer("sample_size").notNullable();
