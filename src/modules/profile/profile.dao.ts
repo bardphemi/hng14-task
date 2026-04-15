@@ -142,6 +142,36 @@ const profileDao = {
         httpStatus.INTERNAL_SERVER_ERROR
       );
     }
+  },
+
+  /**
+   * @description fetch profile
+   * @param id 
+   * @returns 
+   */
+  async fetchProfileById(id: string) {
+    try {
+      return await db("profiles")
+        .select(
+          "id",
+          "name",
+          "gender",
+          "gender_probability",
+          "sample_size",
+          "age",
+          "age_group",
+          "country_id",
+          "country_probability",
+          "created_at",
+        )
+        .where({ id })
+        .first();
+    } catch (error) {
+      throw new AppError(
+        `Upstream or server failure: ${error instanceof Error ? error.message : String(error)}`,
+        httpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
   }
 };
 

@@ -183,6 +183,15 @@ const profileService = {
    */
   async deleteProfileById(id: string) {
     return await profileDao.deleteProfileById(id);
+  },
+
+  /**
+   * @description 
+   * @param id 
+   * @returns 
+   */
+  async fetchProfileById(id: string) {
+    return await profileDao.fetchProfileById(id);
   }
 }
 
