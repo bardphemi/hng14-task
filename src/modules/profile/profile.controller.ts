@@ -33,6 +33,13 @@ const profileCtrl = {
       ageGroup: age_group
     }
     const { data, count } = await profileService.fetchProfiles(params);
+    if (data.length === 0) {
+      return sendResponse(
+        res,
+        httpStatus.NOT_FOUND,
+        "No profile found"
+      );
+    }
     return sendResponse(
       res,
       httpStatus.OK,
