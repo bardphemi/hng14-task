@@ -1,54 +1,131 @@
 # hng14-stg0-task
 
-A small TypeScript + Express API that classifies a first name by gender using the Genderize upstream service. It exposes a single public endpoint and includes unit and integration tests.
+TypeScript + Express API for:
+- classifying a name by gender (`Genderize`)
+- creating and storing enriched profiles (`Genderize` + `Agify` + `Nationalize`)
+- fetching and deleting profiles from PostgreSQL
 
-## Features
-- `GET /api/classify?name=...` returns a normalized prediction
-- `GET /health` returns a simple health status
-- Centralized error handling and structured success responses
-- Logging via Winston with daily-rotating files
-- Unit and integration test suites (Jest + Supertest + Nock)
+## Current Features
+- `GET /health` health check route
+- `GET /api/classify?name=...` returns normalized gender prediction
+- `POST /api/profiles` creates a profile (or returns existing one by name)
+- `GET /api/profiles` fetches profiles with optional filters
+- `GET /api/profiles/:id` fetches profile by id
+- `DELETE /api/profiles/:id` deletes a profile by id
+- Structured success/error responses via middleware
+- Winston logging with daily rotate file transport
+- Jest unit + integration tests (`supertest` + `nock`)
+
+## Stack
+- Node.js + TypeScript
+- Express 5
+- PostgreSQL + Knex migrations
+- Axios for upstream API calls
+- Jest / ts-jest for testing
 
 ## Requirements
-- Node.js 18.x
-- Yarn 1.x
+- Node.js 18+
+- npm or Yarn
+- PostgreSQL database
+
+## Environment Variables
+Create a `.env` file:
+
+```env
+PORT=3000
+GENDERIZE_URL=https://api.genderize.io
+AGIFY_API_URL=https://api.agify.io
+NATIONALIZE_API_URL=https://api.nationalize.io
+DEV_DATABASE_URL=postgresql://username:password@localhost:5432/db_name
+DATABASE_URL=postgresql://username:password@host:5432/db_name
+NODE_ENV=development
+```
+
+Notes:
+- `DEV_DATABASE_URL` is used in development.
+- `DATABASE_URL` is used in production config.
 
 ## Setup
+
 ```bash
-# install dependencies
- yarn install
-
-# start in dev mode
- yarn dev
+yarn install
 ```
 
-## Environment
-Create a `.env` file or export variables:
-- `PORT` (example: `3000`)
-- `GENDERIZE_URL` (example: `https://api.genderize.io`)
+## Run
+```bash
+yarn dev
+```
 
-## API
-### `GET /health`
-Returns:
+## Database Migration
+```bash
+yarn migrate
+```
+
+Rollback:
+
+```bash
+yarn rollback
+```
+
+Production migration commands are also available:
+- `yarn migrate:prod`
+- `yarn rollback:prod`
+
+## API Endpoints
+Base URL: `http://localhost:<PORT>`
+
+### Health
+`GET /health`
+
+Response:
 ```json
-{ "message": "API is healthy" }
+{
+  "message": "API is healthy"
+}
 ```
 
-### `GET /api/classify?name=anna`
-Returns:
+### Classify Name
+`GET /api/classify?name=anna`
+
+Success response:
 ```json
 {
   "status": "success",
+  "message": "Gender prediction successful",
   "data": {
     "name": "anna",
     "gender": "female",
     "sample_size": 200,
     "probability": 0.9,
     "is_confident": true,
-    "processed_at": "2026-01-01T00:00:00.000Z"
+    "processed_at": "2026-04-15T01:00:00.000Z"
   }
 }
 ```
+
+### Create Profile
+`POST /api/profiles`
+
+Request body:
+```json
+{
+  "name": "anna"
+}
+```
+
+### Fetch Profiles
+`GET /api/profiles`
+
+Optional query params:
+- `gender`
+- `country_id`
+- `age_group`
+
+### Fetch Profile by Id
+`GET /api/profiles/:id`
+
+### Delete Profile by Id
+`DELETE /api/profiles/:id`
 
 ## Scripts
 ```bash
@@ -58,16 +135,21 @@ yarn start
 yarn test
 yarn test:unit
 yarn test:integration
+yarn migrate
+yarn rollback
+yarn migrate:prod
+yarn rollback:prod
 ```
 
-## Tests
+## Testing
+Run all tests:
+
 ```bash
-# all tests
- yarn test
+yarn test
+```
 
-# unit only
- yarn test:unit
+Run integration tests:
 
-# integration only
- yarn test:integration
+```bash
+yarn test:integration
 ```
