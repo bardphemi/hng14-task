@@ -113,6 +113,30 @@ const profileDao = {
         httpStatus.INTERNAL_SERVER_ERROR
       );
     }
+  },
+
+  /**
+   * @description deletes a profile by id
+   * @param id 
+   * @returns 
+   */
+  async deleteProfileById(id: string) {
+    try {
+      const deletedCount = await db("profiles")
+        .where({ id })
+        .del();
+      if (deletedCount === 0) {
+        throw new AppError(
+          "Profile not found",
+          httpStatus.NOT_FOUND
+        );
+      }
+    } catch (error) {
+      throw new AppError(
+        `Upstream or server failure: ${error instanceof Error ? error.message : String(error)}`,
+        httpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
   }
 };
 

@@ -15,6 +15,10 @@ profileRouter
   .route("/")
   .get(asyncHandler(profileCtrl.fetchProfiles))
   .post(asyncHandler(profileCtrl.createProfile));
+profileRouter
+  .route("/:id")
+  // .get(asyncHandler(profileCtrl.fetchProfileById))
+  .delete(asyncHandler(profileCtrl.deleteProfileById));
 
 export default profileRouter;
 

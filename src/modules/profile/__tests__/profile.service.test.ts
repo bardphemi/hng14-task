@@ -1,11 +1,14 @@
-jest.mock("node:crypto", () => ({
-  randomUUID: jest.fn(),
-}));
-
+// third-party libraries
 import { randomUUID } from "node:crypto";
+
+// service and dao imports
 import profileService from "../profile.service";
 import classifyService from "../../classify/classify.service";
 import profileDao from "../profile.dao";
+
+jest.mock("node:crypto", () => ({
+  randomUUID: jest.fn(),
+}));
 
 jest.mock("../../classify/classify.service", () => ({
   __esModule: true,
@@ -21,18 +24,17 @@ jest.mock("../profile.dao", () => ({
   },
 }));
 
+// suite
 describe("profileService.createProfile", () => {
   beforeEach(() => {
     (randomUUID as jest.Mock).mockReset();
     (classifyService.predictGender as jest.Mock).mockReset();
     (profileDao.createOrGetProfile as jest.Mock).mockReset();
   });
-
   it("generates an id and persists an assembled profile payload", async () => {
     (randomUUID as jest.Mock).mockReturnValueOnce(
       "4ea9b35c-8b53-4a4d-bf77-e6a702875d70"
     );
-
     (classifyService.predictGender as jest.Mock).mockResolvedValueOnce({
       gender: "female",
       sample_size: 120,
