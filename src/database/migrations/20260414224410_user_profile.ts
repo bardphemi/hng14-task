@@ -10,12 +10,12 @@ export async function up(knex: Knex): Promise<void> {
     table.uuid("id").primary();
     table.string("name", 255).notNullable().unique(); 
     table.string("gender", 10).notNullable();
-    table.decimal("gender_probability", 5, 4).notNullable();
+    table.decimal("gender_probability", 3, 2).notNullable();
     table.integer("sample_size").notNullable();
     table.integer("age").notNullable();
     table.string("age_group").notNullable();
     table.string("country_id", 10).notNullable();
-    table.decimal("country_probability", 5, 4).notNullable();
+    table.decimal("country_probability", 3, 2).notNullable();
     table
       .timestamp("created_at", { useTz: true })
       .notNullable()
