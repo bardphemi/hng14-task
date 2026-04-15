@@ -13,10 +13,11 @@ describe("sendResponse", () => {
       send: jest.fn(),
     } as any;
 
-    sendResponse(res, httpStatus.OK, { ok: true });
+    sendResponse(res, httpStatus.OK, "OK", { ok: true });
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.send).toHaveBeenCalledWith({
       status: "success",
+      message: "OK",
       data: { ok: true },
     });
   });

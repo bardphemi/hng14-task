@@ -1,6 +1,6 @@
 // third-party libraries
 import httpStatus from "http-status";
-import { v7 as uuidv7 } from "uuid";
+import { randomUUID } from "node:crypto";
 
 
 
@@ -43,7 +43,7 @@ const profileService = {
     const { age, age_group } = await this.getAge(name);
     const { country_id, country_probability } = await this.getNationality(name);
     const profileDto = {
-      id: uuidv7(),
+      id: randomUUID(),
       name,
       gender,
       gender_probability: probability,
