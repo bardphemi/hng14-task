@@ -6,6 +6,10 @@
     "test": "jest",
     "test:unit": "jest ----testPathPatterns /src/",
     "test:integration": "jest --testPathPatterns /tests/integration/",
+    "migrate": "knex migrate:latest --knexfile ./knexfile.ts",
+    "migrate:prod": "knex migrate:latest --env production --knexfile ./knexfile.ts",
+    "rollback": "knex migrate:rollback --knexfile ./knexfile.ts",
+    "rollback:prod": "knex migrate:rollback --env production --knexfile ./knexfile.ts",
     "prepare": "husky"
   },
   "dependencies": {
@@ -15,7 +19,10 @@
     "express": "^5.2.1",
     "http-status": "^2.1.0",
     "husky": "^9.1.7",
+    "knex": "^3.2.9",
     "mocha": "^11.7.5",
+    "pg": "^8.20.0",
+    "uuid": "^13.0.0",
     "winston": "^3.19.0",
     "winston-daily-rotate-file": "^5.0.0"
   },

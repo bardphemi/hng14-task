@@ -1,4 +1,7 @@
+// third-party libraries
 import httpStatus from "http-status";
+
+// util imports
 import { globalErrorHandler } from "../errorHandler";
 import { AppError } from "../../utils/appError";
 
@@ -9,6 +12,7 @@ jest.mock("../../utils/logger", () => ({
   },
 }));
 
+// 
 describe("globalErrorHandler", () => {
   it("handles AppError with provided status", () => {
     const err = new AppError("Bad", 400);
