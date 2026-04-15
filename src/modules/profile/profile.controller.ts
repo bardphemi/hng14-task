@@ -13,7 +13,7 @@ import profileService from "./profile.service";
 
 const isUuidV7 = (value: string): boolean => {
   const uuidV7Pattern =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return uuidV7Pattern.test(value);
 };
 
@@ -33,6 +33,13 @@ const profileCtrl = {
       ageGroup: age_group
     }
     const { data, count } = await profileService.fetchProfiles(params);
+    if (data.length === 0) {
+      return sendResponse(
+        res,
+        httpStatus.NOT_FOUND,
+        "No profile found"
+      );
+    }
     return sendResponse(
       res,
       httpStatus.OK,
@@ -118,9 +125,35 @@ const profileCtrl = {
    * @param res 
    * @returns 
    */
-  // async fetchProfileById(req: Request, res: Response): Promise<Response> {
-  //   return null
-  // }
+  async fetchProfileById(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params as { id: string };
+    if (!id) {
+      throw new AppError(
+        "Missing or empty id",
+        httpStatus.BAD_REQUEST
+      );
+    }
+    if (!isUuidV7(id)) {
+      throw new AppError(
+        "Invalid id format",
+        httpStatus.UNPROCESSABLE_ENTITY
+      );
+    }
+    const profile = await profileService.fetchProfileById(id);
+    if (!profile) {
+      throw new AppError(
+        "Profile not found",
+        httpStatus.NOT_FOUND
+      )
+    }
+    return sendResponse(
+      res,
+      httpStatus.OK,
+      "Profile fetched successfully",
+      profile
+
+    )
+  }
 };
 
 export default profileCtrl;

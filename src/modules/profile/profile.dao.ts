@@ -21,23 +21,28 @@ const profileDao = {
     try {
       const { gender, countryId, ageGroup } = fetchDto;
       const baseQuery = db("profiles").modify((query) => {
-        if (gender) query.where("gender", gender);
-        if (countryId) query.where("country_id", countryId);
-        if (ageGroup) query.where("age_group", ageGroup);
+        if (gender) {
+          query.whereRaw("LOWER(gender) = ?", [gender.toLowerCase()]);
+        }
+        if (countryId) {
+          query.whereRaw("LOWER(country_id) = ?", [countryId.toLowerCase()]);
+        }
+        if (ageGroup) {
+          query.whereRaw("LOWER(age_group) = ?", [ageGroup.toLowerCase()]);
+        }
       });
-      const dataQuery = baseQuery.clone().select(
-        "id",
-        "name",
-        "gender",
-        "gender_probability",
-        "sample_size",
-        "age",
-        "age_group",
-        "country_id",
-        "country_probability",
-        "created_at"
-      )
-        .limit(FETCH_LIMIT)
+      const dataQuery = baseQuery
+        .clone()
+        .select(
+          "id",
+          "name",
+          "gender",
+          "age",
+          "age_group",
+          "country_id",
+          "created_at"
+        )
+        .limit(FETCH_LIMIT);
       const countQuery = baseQuery.clone().count<{ count: string }>("id as count");
       const [data, countResult]: any = await Promise.all([dataQuery, countQuery]);
       return {
@@ -131,6 +136,36 @@ const profileDao = {
           httpStatus.NOT_FOUND
         );
       }
+    } catch (error) {
+      throw new AppError(
+        `Upstream or server failure: ${error instanceof Error ? error.message : String(error)}`,
+        httpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  },
+
+  /**
+   * @description fetch profile
+   * @param id 
+   * @returns 
+   */
+  async fetchProfileById(id: string) {
+    try {
+      return await db("profiles")
+        .select(
+          "id",
+          "name",
+          "gender",
+          "gender_probability",
+          "sample_size",
+          "age",
+          "age_group",
+          "country_id",
+          "country_probability",
+          "created_at",
+        )
+        .where({ id })
+        .first();
     } catch (error) {
       throw new AppError(
         `Upstream or server failure: ${error instanceof Error ? error.message : String(error)}`,
