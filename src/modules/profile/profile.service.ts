@@ -39,19 +39,25 @@ const profileService = {
    * @param name 
    */
   async createProfile(name: string) {
-    const { gender, sample_size, probability } = await classifyService.predictGender(name);
-    const { age, age_group } = await this.getAge(name);
-    const { country_id, country_probability } = await this.getNationality(name);
+    const [
+      { gender, sample_size, probability },
+      { age, age_group },
+      { country_id, country_probability }
+    ] = await Promise.all([
+      classifyService.predictGender(name),
+      this.getAge(name),
+      this.getNationality(name)
+    ])
     const profileDto = {
       id: randomUUID(),
       name,
       gender,
-      gender_probability: probability,
+      gender_probability: Number(probability),
       sample_size,
       age,
       age_group,
       country_id,
-      country_probability
+      country_probability: Number(country_probability)
     }
     return await profileDao.createOrGetProfile(profileDto);
   },
