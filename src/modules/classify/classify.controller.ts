@@ -41,6 +41,7 @@ const classifyCtrl = {
     return sendResponse(
       res,
       httpStatus.OK,
+      "Gender prediction successful",
       result
     );
   }

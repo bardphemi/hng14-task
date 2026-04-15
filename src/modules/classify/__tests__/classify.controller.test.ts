@@ -49,6 +49,7 @@ describe("classifyCtrl.predictGender", () => {
     expect(sendResponse).toHaveBeenCalledWith(
       res,
       httpStatus.OK,
+      "Gender prediction successful",
       expect.objectContaining({ name: "anna" })
     );
   });
