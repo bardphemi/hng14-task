@@ -21,7 +21,7 @@ interface ApiResponse {
 export const sendResponse = (
   res: Response,
   statusCode: number,
-  message?: string,
+  message?: string | any,
   data?: any,
   count?: number,
 ) => {

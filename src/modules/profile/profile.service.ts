@@ -172,8 +172,17 @@ const profileService = {
    * @param name 
    * @returns 
    */
-  async fetchProfileByName(name:string){
+  async fetchProfileByName(name: string) {
     return await profileDao.fetchProfileByName(name);
+  },
+
+  /**
+   * @description deletes a profile by id
+   * @param id 
+   * @returns 
+   */
+  async deleteProfileById(id: string) {
+    return await profileDao.deleteProfileById(id);
   }
 }
 

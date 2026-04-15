@@ -11,6 +11,12 @@ import { AppError } from "../../utils/appError";
 //service import 
 import profileService from "./profile.service";
 
+const isUuidV7 = (value: string): boolean => {
+  const uuidV7Pattern =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidV7Pattern.test(value);
+};
+
 //profile controller
 const profileCtrl = {
   /**
@@ -76,8 +82,45 @@ const profileCtrl = {
       "Profile created successfully",
       profile
     )
-  }
+  },
+
+  /**
+   * @description deletes a profile
+   * @param req 
+   * @param res 
+   * @returns 
+   */
+  async deleteProfileById(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params as { id: string };
+    if (!id) {
+      throw new AppError(
+        "Missing or empty id",
+        httpStatus.BAD_REQUEST
+      );
+    }
+    if (!isUuidV7(id)) {
+      throw new AppError(
+        "Invalid id format",
+        httpStatus.UNPROCESSABLE_ENTITY
+      );
+    }
+    await profileService.deleteProfileById(id);
+    return sendResponse(
+      res,
+      httpStatus.NO_CONTENT,
+      null
+    )
+  },
+
+  /**
+   * @description fetches profile by id
+   * @param req 
+   * @param res 
+   * @returns 
+   */
+  // async fetchProfileById(req: Request, res: Response): Promise<Response> {
+  //   return null
+  // }
 };
 
 export default profileCtrl;
-
