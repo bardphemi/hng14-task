@@ -1,15 +1,20 @@
 // third-party libraries
 import { Request, Response } from "express";
 import httpStatus from "http-status";
+import fs from "fs";
 
 // middleware
 import { sendResponse } from "../../middlewares/responseHandler";
+import { validator } from "../../middlewares/validator";
 
 // utils import
 import { AppError } from "../../utils/appError";
+import logger from "../../utils/logger";
 
 //service import 
 import profileService from "./profile.service";
+import { processProfilesStreamFromFile } from "../../utils/uploadUtil";
+import { dedupe } from "../../utils/dedupe";
 
 const isUuidV7 = (value: string): boolean => {
   const uuidV7Pattern =
@@ -153,6 +158,39 @@ const profileCtrl = {
       profile
 
     )
+  },
+
+  /**
+   * @description handles bulk profile upload
+   * @param req 
+   * @param res 
+   * @returns 
+   */
+  async uploadProfiles(req: Request, res: Response): Promise<Response> {
+    const file = (req as any).file;
+    if (!file) {
+      throw new AppError(
+        "No file uploaded",
+        httpStatus.BAD_REQUEST
+      )
+    }
+    let inserted = 0;
+    await processProfilesStreamFromFile(file.path, async (batch) => {
+      const uniqueProfiles = dedupe(batch, (p) => `${p.name}-${p.country_id}-${p.age}`);
+      const count = await profileService.bulkInsert(uniqueProfiles);
+      inserted += count;
+    });
+
+    // cleanup
+    fs.unlink(file.path, (err) => {
+      if (err) logger.error("Failed to delete file:", err);
+    });
+    return sendResponse(
+      res,
+      httpStatus.CREATED,
+      "Profiles uploaded successfully",
+      inserted
+    );
   }
 };
 

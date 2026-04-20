@@ -5,7 +5,7 @@ import httpStatus from "http-status";
 import { db } from "../../config/db";
 
 // interface
-import { FetchProfilesParams, ProfileDTO } from "./profile.interface";
+import { FetchProfilesParams, ProfileDTO, ProfileInsert } from "./profile.interface";
 
 // utils import
 import { AppError } from "../../utils/appError";
@@ -166,6 +166,30 @@ const profileDao = {
         )
         .where({ id })
         .first();
+    } catch (error) {
+      throw new AppError(
+        `Upstream or server failure: ${error instanceof Error ? error.message : String(error)}`,
+        httpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  },
+
+  /**
+   * @description handles bulk profile insert
+   * @param profiles 
+   * @returns 
+   */
+  async bulkInsert(profiles: ProfileInsert[]): Promise<number> {
+    try {
+      if (!profiles.length) {
+        return 0;
+      }
+      const inserted = await db("profiles")
+        .insert(profiles)
+        .onConflict(["name", "age", "country_id"])
+        .ignore()
+        .returning("id");
+      return inserted.length;
     } catch (error) {
       throw new AppError(
         `Upstream or server failure: ${error instanceof Error ? error.message : String(error)}`,
