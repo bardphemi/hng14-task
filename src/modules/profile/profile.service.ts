@@ -11,7 +11,7 @@ import profileDao from "./profile.dao";
 import classifyService from "../classify/classify.service";
 
 // interface
-import { AgeGroup, AgifyResponse, FetchProfilesParams, NationalityResponse } from "./profile.interface";
+import { AgeGroup, AgifyResponse, FetchProfilesParams, NationalityResponse, ProfileInsert } from "./profile.interface";
 
 // utils import
 import { axiosInstance } from "../../utils/axiosUtil";
@@ -198,6 +198,15 @@ const profileService = {
    */
   async fetchProfileById(id: string) {
     return await profileDao.fetchProfileById(id);
+  },
+
+  /**
+   * @description handles bulk insert of profiles
+   * @param profiles 
+   * @returns 
+   */
+  async bulkInsert(profiles: ProfileInsert[]) {
+    return await profileDao.bulkInsert(profiles);
   }
 }
 
