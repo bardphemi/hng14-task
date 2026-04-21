@@ -15,6 +15,7 @@ type ValidationSchemas = {
  */
 export const validator = (schemas: ValidationSchemas) => {
   return (req: Request, res: Response, next: NextFunction) => {
+    (req as any).validated = {};
     const validations = [
       { key: "body", value: req.body },
       { key: "query", value: req.query },
@@ -22,15 +23,19 @@ export const validator = (schemas: ValidationSchemas) => {
     ];
     for (const { key, value } of validations) {
       if (schemas[key]) {
-        const { error } = schemas[key].validate(value, { abortEarly: false });
+        const { value: validatedValue, error } = schemas[key].validate(value, {
+          abortEarly: false,
+          convert: true
+        });
         if (error) {
           return res
             .status(httpStatus.BAD_REQUEST)
-            .json({
+            .send({
               status: false,
               message: `Validation error: ${error.details.map((d) => d.message)}`,
             });
         }
+        (req as any).validated[key] = validatedValue;
       }
     }
     return next();

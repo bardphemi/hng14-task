@@ -41,3 +41,47 @@ export const uploadSchema = Joi.object({
     .required(),
 });
 
+export const fetchProfilesQuerySchema = Joi.object({
+  gender: Joi.string()
+    .valid("male", "female")
+    .insensitive()
+    .optional(),
+  age_group: Joi.string()
+    .valid("child", "teenager", "adult", "senior")
+    .optional(),
+  country_id: Joi.string()
+    .length(2)
+    .uppercase()
+    .optional(),
+  min_age: Joi.number()
+    .integer()
+    .min(0)
+    .optional(),
+  max_age: Joi.number()
+    .integer()
+    .min(0)
+    .optional(),
+  min_gender_probability: Joi.number()
+    .min(0)
+    .max(1)
+    .optional(),
+  min_country_probability: Joi.number()
+    .min(0)
+    .max(1)
+    .optional(),
+})
+  .custom((value, helpers) => {
+    if (
+      value.min_age !== undefined &&
+      value.max_age !== undefined &&
+      value.min_age > value.max_age
+    ) {
+      return helpers.error("any.invalid", {
+        message: "min_age cannot be greater than max_age",
+      });
+    }
+    return value;
+  })
+  .messages({
+    "any.invalid": "{{#message}}",
+  });

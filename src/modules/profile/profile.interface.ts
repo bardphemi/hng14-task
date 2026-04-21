@@ -1,7 +1,12 @@
 export interface FetchProfilesParams {
   gender?: string | any;
-  countryId?: string | any;
   ageGroup?: string | any;
+  country_id: string | any;
+  age_group?: string | any;
+  min_age?: number;
+  max_age?: number;
+  min_country_probability?: number;
+  min_gender_probability?: number;
 };
 
 export interface AgifyResponse {

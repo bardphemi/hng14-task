@@ -31,11 +31,25 @@ const profileCtrl = {
    * @returns
    */
   async fetchProfiles(req: Request, res: Response): Promise<Response> {
-    const { gender, country_id, age_group } = req.query;
+
+    const {
+      gender,
+      country_id,
+      age_group,
+      min_age,
+      max_age,
+      min_country_probability,
+      min_gender_probability
+      // @ts-expect-error 
+    } = req.validated?.query;
     const params = {
       gender,
-      countryId: country_id,
-      ageGroup: age_group
+      country_id,
+      age_group,
+      min_age,
+      max_age,
+      min_country_probability,
+      min_gender_probability
     }
     const { data, count } = await profileService.fetchProfiles(params);
     if (data.length === 0) {
