@@ -1,1 +1,78 @@
 export const FETCH_LIMIT = 50;
+export const GENDER_MAP: Record<string, string> = {
+  male: "male",
+  males: "male",
+  female: "female",
+  females: "female",
+  guys:"male",
+  guy:"male",
+};
+export const AGE_GROUP_MAP: Record<string, string> = {
+  child: "child",
+  children: "child",
+  kid: "child",
+  kids: "child",
+  teenager: "teenager",
+  teenagers: "teenager",
+  adult: "adult",
+  adults: "adult",
+  senior: "senior",
+  seniors: "senior",
+};
+export const AGE_KEYWORDS: Record<
+  string,
+  { min_age: number; max_age: number }
+> = {
+  young: { min_age: 16, max_age: 24 },
+};
+export const COUNTRY_MAP: Record<string, string> = {
+  kenya: "KE",
+  angola: "AO",
+  benin: "BJ",
+  nigeria: "NG",
+  egypt: "EG",
+  ethiopia: "ET",
+  ghana: "GH",
+  morocco: "MA",
+  algeria: "DZ",
+  tunisia: "TN",
+  uganda: "UG",
+  tanzania: "TZ",
+  senegal: "SN",
+  rwanda: "RW",
+  cameroon: "CM",
+  zimbabwe: "ZW",
+  zambia: "ZM",
+  botswana: "BW",
+  namibia: "NA",
+  canada: "CA",
+  brazil: "BR",
+  mexico: "MX",
+  argentina: "AR",
+  colombia: "CO",
+  chile: "CL",
+  peru: "PE",
+  germany: "DE",
+  france: "FR",
+  italy: "IT",
+  spain: "ES",
+  netherlands: "NL",
+  belgium: "BE",
+  switzerland: "CH",
+  sweden: "SE",
+  norway: "NO",
+  china: "CN",
+  india: "IN",
+  japan: "JP",
+  indonesia: "ID",
+  turkey: "TR",
+  israel: "IL",
+  malaysia: "MY",
+  thailand: "TH",
+  singapore: "SG",
+  philippines: "PH",
+  vietnam: "VN",
+  pakistan: "PK"
+}
+
+

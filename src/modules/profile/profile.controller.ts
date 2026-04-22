@@ -7,14 +7,15 @@ import fs from "fs";
 import { sendResponse } from "../../middlewares/responseHandler";
 import { validator } from "../../middlewares/validator";
 
+//service import 
+import profileService from "./profile.service";
+
 // utils import
 import { AppError } from "../../utils/appError";
 import logger from "../../utils/logger";
-
-//service import 
-import profileService from "./profile.service";
 import { processProfilesStreamFromFile } from "../../utils/uploadUtil";
 import { dedupe } from "../../utils/dedupe";
+import { parseSearchQuery } from "../../utils/queryParser";
 
 const isUuidV7 = (value: string): boolean => {
   const uuidV7Pattern =
@@ -47,7 +48,7 @@ const profileCtrl = {
       httpStatus.OK,
       "Profiles fetched successfully",
       data,
-      { total, page, limit },
+      { total, page: Number(page), limit: Number(limit) },
     );
   },
 
@@ -186,6 +187,35 @@ const profileCtrl = {
       httpStatus.CREATED,
       "Profiles uploaded successfully",
       inserted
+    );
+  },
+
+  /**
+   * @description handles natural language query
+   * @param req 
+   * @param res 
+   * @returns 
+   */
+  async searchProfile(req: Request, res: Response): Promise<Response> {
+    const { q, page = 1, limit = 10 } = req.query as any;
+    const parsedFilters = parseSearchQuery(q);
+    if (!parsedFilters) {
+      throw new AppError(
+        "Unable to interpret query",
+        httpStatus.BAD_REQUEST
+      );
+    }
+    const { data, total } = await profileService.fetchProfiles({
+      ...parsedFilters,
+      page: Number(page),
+      limit: Number(limit),
+    });
+    return sendResponse(
+      res,
+      httpStatus.OK,
+      "Profiles fetched successfully",
+      data,
+      { total, page: Number(page), limit: Number(limit) },
     );
   }
 };

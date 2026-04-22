@@ -3,13 +3,15 @@
 TypeScript + Express API for:
 - classifying a name by gender (`Genderize`)
 - creating and storing enriched profiles (`Genderize` + `Agify` + `Nationalize`)
-- fetching and deleting profiles from PostgreSQL
+- searching, filtering, and deleting profiles from PostgreSQL
 
 ## Current Features
 - `GET /health` health check route
 - `GET /api/classify?name=...` returns normalized gender prediction
 - `POST /api/profiles` creates a profile (or returns existing one by name)
-- `GET /api/profiles` fetches profiles with optional filters
+- `POST /api/profiles/upload` bulk profile upload via file (`multipart/form-data`)
+- `GET /api/profiles` fetches profiles with filters, sorting, and pagination
+- `GET /api/profiles/search?q=...` natural-language profile search
 - `GET /api/profiles/:id` fetches profile by id
 - `DELETE /api/profiles/:id` deletes a profile by id
 - Structured success/error responses via middleware
@@ -21,6 +23,7 @@ TypeScript + Express API for:
 - Express 5
 - PostgreSQL + Knex migrations
 - Axios for upstream API calls
+- Joi validation for request schemas
 - Jest / ts-jest for testing
 
 ## Requirements
@@ -52,11 +55,13 @@ yarn install
 ```
 
 ## Run
+
 ```bash
 yarn dev
 ```
 
 ## Database Migration
+
 ```bash
 yarn migrate
 ```
@@ -113,13 +118,40 @@ Request body:
 }
 ```
 
-### Fetch Profiles
+### Bulk Upload Profiles
+`POST /api/profiles/upload`
+
+Request format:
+- `multipart/form-data`
+- file field name: `file`
+
+### Fetch Profiles (Structured Filters)
 `GET /api/profiles`
 
 Optional query params:
-- `gender`
-- `country_id`
-- `age_group`
+- `gender`: `male | female`
+- `country_id`: 2-letter country code (e.g. `NG`)
+- `age_group`: `child | teenager | adult | senior`
+- `min_age`
+- `max_age`
+- `min_gender_probability`
+- `min_country_probability`
+- `sort_by`: `age | created_at | gender_probability`
+- `order`: `asc | desc`
+- `page` (default `1`)
+- `limit` (default `10`, max `50`)
+
+### Search Profiles (Natural Language)
+`GET /api/profiles/search?q=...`
+
+Examples:
+- `female adults in nigeria`
+- `young guys in kenya above 20`
+- `females in canada between 30 and 40`
+
+Also supports:
+- `page` (default `1`)
+- `limit` (default `10`, max `50`)
 
 ### Fetch Profile by Id
 `GET /api/profiles/:id`

@@ -159,8 +159,78 @@ describe("integration: app", () => {
       .query({ min_age: "30", max_age: "20" });
 
     expect(res.status).toBe(httpStatus.BAD_REQUEST);
-    expect(res.body.status).toBe(false);
-    expect(res.body.message).toContain("min_age cannot be greater than max_age");
+    expect(res.body).toEqual({
+      status: "error",
+      message: "Invalid query parameters",
+    });
+    expect(profileService.fetchProfiles).not.toHaveBeenCalled();
+  });
+
+  it("GET /api/profiles/search parses natural-language query and returns paginated payload", async () => {
+    (profileService.fetchProfiles as jest.Mock).mockResolvedValueOnce({
+      data: [
+        {
+          id: "f7e5f6af-6f22-4c2b-9f0e-46cd935b0082",
+          name: "ada",
+          gender: "female",
+          age: 25,
+          age_group: "adult",
+          country_id: "NG",
+        },
+      ],
+      total: 1,
+      page: 2,
+      limit: 1,
+    });
+
+    const res = await request(app)
+      .get("/api/profiles/search")
+      .query({
+        q: "female adults in nigeria above 21",
+        page: "2",
+        limit: "1",
+      });
+
+    expect(res.status).toBe(httpStatus.OK);
+    expect(profileService.fetchProfiles).toHaveBeenCalledWith({
+      gender: "female",
+      age_group: "adult",
+      country_id: "NG",
+      min_age: 21,
+      page: 2,
+      limit: 1,
+    });
+    expect(res.body.status).toBe("success");
+    expect(res.body.message).toBe("Profiles fetched successfully");
+    expect(res.body.total).toBe(1);
+    expect(res.body.page).toBe(2);
+    expect(res.body.limit).toBe(1);
+    expect(res.body.data).toHaveLength(1);
+  });
+
+  it("GET /api/profiles/search validates malformed query params", async () => {
+    const res = await request(app)
+      .get("/api/profiles/search")
+      .query({ q: "ab" });
+
+    expect(res.status).toBe(httpStatus.BAD_REQUEST);
+    expect(res.body).toEqual({
+      status: "error",
+      message: "Invalid query parameters",
+    });
+    expect(profileService.fetchProfiles).not.toHaveBeenCalled();
+  });
+
+  it("GET /api/profiles/search returns bad request when query cannot be interpreted", async () => {
+    const res = await request(app)
+      .get("/api/profiles/search")
+      .query({ q: "lorem ipsum" });
+
+    expect(res.status).toBe(httpStatus.BAD_REQUEST);
+    expect(res.body).toEqual({
+      status: "error",
+      message: "Unable to interpret query",
+    });
     expect(profileService.fetchProfiles).not.toHaveBeenCalled();
   });
 });
