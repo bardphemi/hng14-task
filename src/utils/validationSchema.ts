@@ -103,3 +103,25 @@ export const fetchProfilesQuerySchema = Joi.object({
   .messages({
     "any.invalid": "{{#message}}",
   });
+
+// validates search strings
+export const searchProfilesQuerySchema = Joi.object({
+  q: Joi.string()
+    .trim()
+    .min(3)
+    .required()
+    .messages({
+      "string.empty": "Search query (q) is required",
+      "string.min": "Search query must be at least 3 characters",
+    }),
+  page: Joi.number()
+    .integer()
+    .min(1)
+    .default(1),
+
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .max(50)
+    .default(10),
+});

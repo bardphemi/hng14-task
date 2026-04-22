@@ -31,8 +31,8 @@ export const validator = (schemas: ValidationSchemas) => {
           return res
             .status(httpStatus.BAD_REQUEST)
             .send({
-              status: false,
-              message: `Validation error: ${error.details.map((d) => d.message)}`,
+              status: "error",
+              message: "Invalid query parameters",
             });
         }
         (req as any).validated[key] = validatedValue;

@@ -10,7 +10,7 @@ import { validator } from "../../middlewares/validator";
 // utils import
 import { asyncHandler } from "../../utils/asyncHandler";
 import { upload } from "../../utils/uploadUtil";
-import { fetchProfilesQuerySchema } from "../../utils/validationSchema";
+import { fetchProfilesQuerySchema, searchProfilesQuerySchema } from "../../utils/validationSchema";
 
 // router
 const profileRouter = Router();
@@ -21,6 +21,10 @@ profileRouter.post(
   upload.single("file"),
   asyncHandler(profileCtrl.uploadProfiles)
 );
+profileRouter.get("/search",
+  validator({query: searchProfilesQuerySchema}),
+  asyncHandler(profileCtrl.searchProfile)
+)
 profileRouter
   .route("/")
   .get(
