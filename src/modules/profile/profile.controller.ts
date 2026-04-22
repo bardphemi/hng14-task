@@ -31,13 +31,10 @@ const profileCtrl = {
    * @returns
    */
   async fetchProfiles(req: Request, res: Response): Promise<Response> {
-    const { gender, country_id, age_group } = req.query;
-    const params = {
-      gender,
-      countryId: country_id,
-      ageGroup: age_group
-    }
-    const { data, count } = await profileService.fetchProfiles(params);
+    // @ts-expect-error 
+    const { query } = req.validated;
+
+    const { data, total, page, limit } = await profileService.fetchProfiles(query);
     if (data.length === 0) {
       return sendResponse(
         res,
@@ -50,7 +47,7 @@ const profileCtrl = {
       httpStatus.OK,
       "Profiles fetched successfully",
       data,
-      count,
+      { total, page, limit },
     );
   },
 
@@ -120,7 +117,6 @@ const profileCtrl = {
     return sendResponse(
       res,
       httpStatus.NO_CONTENT,
-      null
     )
   },
 
