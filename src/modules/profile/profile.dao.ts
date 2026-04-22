@@ -62,17 +62,18 @@ const profileDao = {
           "created_at"
         )
         .orderBy(sort_by, order)
+        .orderBy("id", order)
         .limit(limit)
         .offset(offset);
 
       // fetch count
       const countQuery = baseQuery
         .clone()
-        .count<{ count: string }>("id as count");
+        .count({ count: "id" }).first();
       const [data, countResult]: any = await Promise.all([dataQuery, countQuery]);
       return {
         data,
-        total: Number(countResult[0].count),
+        total: Number(countResult.count),
         page,
         limit,
       };
