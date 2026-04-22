@@ -41,6 +41,7 @@ export const uploadSchema = Joi.object({
     .required(),
 });
 
+// profile fetching schema
 export const fetchProfilesQuerySchema = Joi.object({
   gender: Joi.string()
     .valid("male", "female")
@@ -69,6 +70,22 @@ export const fetchProfilesQuerySchema = Joi.object({
     .min(0)
     .max(1)
     .optional(),
+  sort_by: Joi.string()
+    .valid("age", "created_at", "gender_probability")
+    .default("created_at"),
+  order: Joi.string()
+    .valid("asc", "desc")
+    .lowercase()
+    .default("desc"),
+  page: Joi.number()
+    .integer()
+    .min(1)
+    .default(1),
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .max(50)
+    .default(10),
 })
   .custom((value, helpers) => {
     if (
@@ -80,6 +97,7 @@ export const fetchProfilesQuerySchema = Joi.object({
         message: "min_age cannot be greater than max_age",
       });
     }
+
     return value;
   })
   .messages({

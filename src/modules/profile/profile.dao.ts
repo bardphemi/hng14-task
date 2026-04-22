@@ -15,40 +15,38 @@ import { FETCH_LIMIT } from "../../utils/constants";
 const profileDao = {
   /**
    * @description fetchs all profiles with optional filters
-   * @param fetchDto 
+   * @param query 
    */
-  async fetchProfiles(fetchDto: FetchProfilesParams) {
+  async fetchProfiles(query: FetchProfilesParams) {
     try {
-      const { gender,
+      const {
+        gender,
         country_id,
         age_group,
         min_age,
         max_age,
         min_country_probability,
-        min_gender_probability } = fetchDto;
-      const baseQuery = db("profiles").modify((query) => {
-        if (gender) {
-          query.whereRaw("LOWER(gender) = ?", [gender.toLowerCase()]);
+        min_gender_probability,
+        sort_by = "created_at",
+        order = "desc",
+        page = 1,
+        limit = 10,
+      } = query;
+      const baseQuery = db("profiles").modify((qb) => {
+        if (gender) qb.where("gender", gender);
+        if (country_id) qb.where("country_id", country_id);
+        if (age_group) qb.where("age_group", age_group);
+        if (min_age !== undefined) qb.where("age", ">=", min_age);
+        if (max_age !== undefined) qb.where("age", "<=", max_age);
+        if (min_country_probability !== undefined) {
+          qb.where("country_probability", ">=", min_country_probability);
         }
-        if (country_id) {
-          query.whereRaw("LOWER(country_id) = ?", [country_id.toLowerCase()]);
-        }
-        if (age_group) {
-          query.whereRaw("LOWER(age_group) = ?", [age_group.toLowerCase()]);
-        }
-        if (min_age) {
-          query.whereRaw("age >= ?", [min_age]);
-        }
-        if (max_age) {
-          query.whereRaw("age <= ?", [max_age]);
-        }
-        if (min_country_probability) {
-          query.whereRaw("country_probability >= ?", [min_country_probability]);
-        }
-        if (min_gender_probability) {
-          query.whereRaw("gender_probability >= ?", [min_gender_probability]);
+        if (min_gender_probability !== undefined) {
+          qb.where("gender_probability", ">=", min_gender_probability);
         }
       });
+
+      const offset = (page - 1) * limit;
       const dataQuery = baseQuery
         .clone()
         .select(
@@ -63,17 +61,25 @@ const profileDao = {
           "country_probability",
           "created_at"
         )
-        .limit(FETCH_LIMIT);
-      const countQuery = baseQuery.clone().count<{ count: string }>("id as count");
+        .orderBy(sort_by, order)
+        .limit(limit)
+        .offset(offset);
+
+      // fetch count
+      const countQuery = baseQuery
+        .clone()
+        .count<{ count: string }>("id as count");
       const [data, countResult]: any = await Promise.all([dataQuery, countQuery]);
       return {
         data,
-        count: Number(countResult[0].count),
+        total: Number(countResult[0].count),
+        page,
+        limit,
       };
-    }
-    catch (error) {
+    } catch (error) {
       throw new AppError(
-        `Error fetching profiles: ${error instanceof Error ? error.message : String(error)}`,
+        `Error fetching profiles: ${error instanceof Error ? error.message : String(error)
+        }`,
         httpStatus.INTERNAL_SERVER_ERROR
       );
     }
