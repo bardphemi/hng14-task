@@ -1,15 +1,21 @@
 // third-party libraries
 import { Request, Response } from "express";
 import httpStatus from "http-status";
+import fs from "fs";
 
 // middleware
 import { sendResponse } from "../../middlewares/responseHandler";
-
-// utils import
-import { AppError } from "../../utils/appError";
+import { validator } from "../../middlewares/validator";
 
 //service import 
 import profileService from "./profile.service";
+
+// utils import
+import { AppError } from "../../utils/appError";
+import logger from "../../utils/logger";
+import { processProfilesStreamFromFile } from "../../utils/uploadUtil";
+import { dedupe } from "../../utils/dedupe";
+import { parseSearchQuery } from "../../utils/queryParser";
 
 const isUuidV7 = (value: string): boolean => {
   const uuidV7Pattern =
@@ -26,13 +32,10 @@ const profileCtrl = {
    * @returns
    */
   async fetchProfiles(req: Request, res: Response): Promise<Response> {
-    const { gender, country_id, age_group } = req.query;
-    const params = {
-      gender,
-      countryId: country_id,
-      ageGroup: age_group
-    }
-    const { data, count } = await profileService.fetchProfiles(params);
+    // @ts-expect-error 
+    const { query } = req.validated;
+
+    const { data, total, page, limit } = await profileService.fetchProfiles(query);
     if (data.length === 0) {
       return sendResponse(
         res,
@@ -45,7 +48,7 @@ const profileCtrl = {
       httpStatus.OK,
       "Profiles fetched successfully",
       data,
-      count,
+      { total, page: Number(page), limit: Number(limit) },
     );
   },
 
@@ -115,7 +118,6 @@ const profileCtrl = {
     return sendResponse(
       res,
       httpStatus.NO_CONTENT,
-      null
     )
   },
 
@@ -153,6 +155,68 @@ const profileCtrl = {
       profile
 
     )
+  },
+
+  /**
+   * @description handles bulk profile upload
+   * @param req 
+   * @param res 
+   * @returns 
+   */
+  async uploadProfiles(req: Request, res: Response): Promise<Response> {
+    const file = (req as any).file;
+    if (!file) {
+      throw new AppError(
+        "No file uploaded",
+        httpStatus.BAD_REQUEST
+      )
+    }
+    let inserted = 0;
+    await processProfilesStreamFromFile(file.path, async (batch) => {
+      const uniqueProfiles = dedupe(batch, (p) => `${p.name}-${p.country_id}-${p.age}`);
+      const count = await profileService.bulkInsert(uniqueProfiles);
+      inserted += count;
+    });
+
+    // cleanup
+    fs.unlink(file.path, (err) => {
+      if (err) logger.error("Failed to delete file:", err);
+    });
+    return sendResponse(
+      res,
+      httpStatus.CREATED,
+      "Profiles uploaded successfully",
+      inserted
+    );
+  },
+
+  /**
+   * @description handles natural language query
+   * @param req 
+   * @param res 
+   * @returns 
+   */
+  async searchProfile(req: Request, res: Response): Promise<Response> {
+    const { q, page = 1, limit = 10 } = req.query as any;
+    const parsedFilters = parseSearchQuery(q);
+    if (!parsedFilters) {
+      throw new AppError(
+        "Unable to interpret query",
+        httpStatus.BAD_REQUEST
+      );
+    }
+    const { data, total } = await profileService.fetchProfiles({
+      ...parsedFilters,
+      page: Number(page),
+      limit: Number(limit),
+    });
+    return sendResponse(
+      res,
+      httpStatus.OK,
+      "Profiles fetched successfully",
+      data,
+      { total, page: Number(page), limit: Number(limit) },
+    );
   }
 };
 

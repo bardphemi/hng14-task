@@ -1,7 +1,16 @@
 export interface FetchProfilesParams {
   gender?: string | any;
-  countryId?: string | any;
   ageGroup?: string | any;
+  country_id: string | any;
+  age_group?: string | any;
+  min_age?: number;
+  max_age?: number;
+  min_country_probability?: number;
+  min_gender_probability?: number;
+  sort_by?: string;
+  order?: string;
+  page?: number;
+  limit?: number;
 };
 
 export interface AgifyResponse {
@@ -38,4 +47,15 @@ export interface ProfileDTO {
   country_id: string;
   country_probability: number
 };
+
+export interface ProfileInsert {
+  name: string;
+  gender: string;
+  gender_probability: number;
+  age: number;
+  age_group: string;
+  country_id: string;
+  country_name: string;
+  country_probability: number;
+}
 

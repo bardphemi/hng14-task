@@ -21,19 +21,28 @@ interface ApiResponse {
 export const sendResponse = (
   res: Response,
   statusCode: number,
-  message?: string | any,
+  message?: string,
   data?: any,
-  count?: number,
+  pagination?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+  }
 ) => {
-  const response: ApiResponse = {
+  const response: any = {
     status: "success",
-    message,
     data,
   };
-  if (count !== undefined) {
-    response.count = count;
+  if (message) {
+    response.message = message;
   }
-  return res
-    .status(statusCode)
-    .send(response);
+  if (pagination) {
+    const { page, limit, total } = pagination;
+    if (page !== undefined) response.page = page;
+    if (limit !== undefined) response.limit = limit;
+    if (total !== undefined) response.total = total;
+  }
+
+  return res.status(statusCode).send(response);
 };
+

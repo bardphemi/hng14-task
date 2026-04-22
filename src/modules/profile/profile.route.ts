@@ -1,19 +1,36 @@
 // third-party libraries
 import { Router } from "express";
 
-// utils import
-import { asyncHandler } from "../../utils/asyncHandler";
-
 // controller
 import profileCtrl from "./profile.controller";
+
+// middlewwware
+import { validator } from "../../middlewares/validator";
+
+// utils import
+import { asyncHandler } from "../../utils/asyncHandler";
+import { upload } from "../../utils/uploadUtil";
+import { fetchProfilesQuerySchema, searchProfilesQuerySchema } from "../../utils/validationSchema";
 
 // router
 const profileRouter = Router();
 
 // route(s)
+profileRouter.post(
+  "/upload",
+  upload.single("file"),
+  asyncHandler(profileCtrl.uploadProfiles)
+);
+profileRouter.get("/search",
+  validator({query: searchProfilesQuerySchema}),
+  asyncHandler(profileCtrl.searchProfile)
+)
 profileRouter
   .route("/")
-  .get(asyncHandler(profileCtrl.fetchProfiles))
+  .get(
+    validator({ query: fetchProfilesQuerySchema }),
+    asyncHandler(profileCtrl.fetchProfiles)
+  )
   .post(asyncHandler(profileCtrl.createProfile));
 profileRouter
   .route("/:id")

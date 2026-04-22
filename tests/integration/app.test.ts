@@ -103,4 +103,134 @@ describe("integration: app", () => {
       country_id: "NG",
     });
   });
+
+  it("GET /api/profiles applies query filters and returns paginated payload", async () => {
+    (profileService.fetchProfiles as jest.Mock).mockResolvedValueOnce({
+      data: [
+        {
+          id: "f7e5f6af-6f22-4c2b-9f0e-46cd935b0082",
+          name: "anna",
+          gender: "female",
+          age: 24,
+          age_group: "adult",
+          country_id: "NG",
+        },
+      ],
+      total: 1,
+      page: 2,
+      limit: 1,
+    });
+
+    const res = await request(app)
+      .get("/api/profiles")
+      .query({
+        gender: "female",
+        country_id: "ng",
+        min_age: "18",
+        max_age: "40",
+        page: "2",
+        limit: "1",
+      });
+
+    expect(res.status).toBe(httpStatus.OK);
+    expect(profileService.fetchProfiles).toHaveBeenCalledWith(
+      expect.objectContaining({
+        gender: "female",
+        country_id: "NG",
+        min_age: 18,
+        max_age: 40,
+        sort_by: "created_at",
+        order: "desc",
+        page: 2,
+        limit: 1,
+      })
+    );
+    expect(res.body.status).toBe("success");
+    expect(res.body.message).toBe("Profiles fetched successfully");
+    expect(res.body.total).toBe(1);
+    expect(res.body.page).toBe(2);
+    expect(res.body.limit).toBe(1);
+    expect(res.body.data).toHaveLength(1);
+  });
+
+  it("GET /api/profiles returns validation error when min_age is greater than max_age", async () => {
+    const res = await request(app)
+      .get("/api/profiles")
+      .query({ min_age: "30", max_age: "20" });
+
+    expect(res.status).toBe(httpStatus.BAD_REQUEST);
+    expect(res.body).toEqual({
+      status: "error",
+      message: "Invalid query parameters",
+    });
+    expect(profileService.fetchProfiles).not.toHaveBeenCalled();
+  });
+
+  it("GET /api/profiles/search parses natural-language query and returns paginated payload", async () => {
+    (profileService.fetchProfiles as jest.Mock).mockResolvedValueOnce({
+      data: [
+        {
+          id: "f7e5f6af-6f22-4c2b-9f0e-46cd935b0082",
+          name: "ada",
+          gender: "female",
+          age: 25,
+          age_group: "adult",
+          country_id: "NG",
+        },
+      ],
+      total: 1,
+      page: 2,
+      limit: 1,
+    });
+
+    const res = await request(app)
+      .get("/api/profiles/search")
+      .query({
+        q: "female adults in nigeria above 21",
+        page: "2",
+        limit: "1",
+      });
+
+    expect(res.status).toBe(httpStatus.OK);
+    expect(profileService.fetchProfiles).toHaveBeenCalledWith({
+      gender: "female",
+      age_group: "adult",
+      country_id: "NG",
+      min_age: 21,
+      page: 2,
+      limit: 1,
+    });
+    expect(res.body.status).toBe("success");
+    expect(res.body.message).toBe("Profiles fetched successfully");
+    expect(res.body.total).toBe(1);
+    expect(res.body.page).toBe(2);
+    expect(res.body.limit).toBe(1);
+    expect(res.body.data).toHaveLength(1);
+  });
+
+  it("GET /api/profiles/search validates malformed query params", async () => {
+    const res = await request(app)
+      .get("/api/profiles/search")
+      .query({ q: "ab" });
+
+    expect(res.status).toBe(httpStatus.BAD_REQUEST);
+    expect(res.body).toEqual({
+      status: "error",
+      message: "Invalid query parameters",
+    });
+    expect(profileService.fetchProfiles).not.toHaveBeenCalled();
+  });
+
+  it("GET /api/profiles/search returns bad request when query cannot be interpreted", async () => {
+    const res = await request(app)
+      .get("/api/profiles/search")
+      .query({ q: "lorem ipsum" });
+
+    expect(res.status).toBe(httpStatus.BAD_REQUEST);
+    expect(res.body).toEqual({
+      status: "error",
+      message: "Unable to interpret query",
+    });
+    expect(profileService.fetchProfiles).not.toHaveBeenCalled();
+  });
 });
