@@ -104,6 +104,11 @@ export const fetchProfilesQuerySchema = Joi.object({
     "any.invalid": "{{#message}}",
   });
 
+  // valdiates referesh token payload
+export const refreshTokenSchema = Joi.object({
+  refresh_token: Joi.string().required().trim()
+})
+
 // validates search strings
 export const searchProfilesQuerySchema = Joi.object({
   q: Joi.string()

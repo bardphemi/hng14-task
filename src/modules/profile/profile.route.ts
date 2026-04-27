@@ -6,6 +6,7 @@ import profileCtrl from "./profile.controller";
 
 // middlewwware
 import { validator } from "../../middlewares/validator";
+import { adminCheck } from "../../middlewares/handleAccess";
 
 // utils import
 import { asyncHandler } from "../../utils/asyncHandler";
@@ -22,7 +23,7 @@ profileRouter.post(
   asyncHandler(profileCtrl.uploadProfiles)
 );
 profileRouter.get("/search",
-  validator({query: searchProfilesQuerySchema}),
+  validator({ query: searchProfilesQuerySchema }),
   asyncHandler(profileCtrl.searchProfile)
 )
 profileRouter
@@ -31,7 +32,9 @@ profileRouter
     validator({ query: fetchProfilesQuerySchema }),
     asyncHandler(profileCtrl.fetchProfiles)
   )
-  .post(asyncHandler(profileCtrl.createProfile));
+  .post(
+    adminCheck,
+    asyncHandler(profileCtrl.createProfile));
 profileRouter
   .route("/:id")
   .get(asyncHandler(profileCtrl.fetchProfileById))
