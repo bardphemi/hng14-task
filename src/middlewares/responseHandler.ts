@@ -27,15 +27,25 @@ export const sendResponse = (
     page?: number;
     limit?: number;
     total?: number;
+  },
+  options?: {
+    flat?: boolean;
   }
 ) => {
   const response: any = {
     status: "success",
-    data,
   };
+
+  if (options?.flat && data && typeof data === "object") {
+    Object.assign(response, data);
+  } else {
+    response.data = data;
+  }
+
   if (message) {
     response.message = message;
   }
+
   if (pagination) {
     const { page, limit, total } = pagination;
     if (page !== undefined) response.page = page;

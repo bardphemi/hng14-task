@@ -5,7 +5,6 @@ import fs from "fs";
 
 // middleware
 import { sendResponse } from "../../middlewares/responseHandler";
-import { validator } from "../../middlewares/validator";
 
 //service import 
 import profileService from "./profile.service";
