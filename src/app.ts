@@ -14,6 +14,9 @@ import rateLimit from "express-rate-limit";
 import mainRouter from "./modules";
 import authRouter from "./modules/auth/auth.route";
 
+// api docs
+import { setupSwagger } from "./docs/swagger";
+
 // middleware
 import { globalErrorHandler } from "./middlewares/errorHandler";
 import { authCheck } from "./middlewares/handleAccess";
@@ -71,6 +74,7 @@ app.get("/health", (_req, res) => {
     message: "API is healthy"
   });
 });
+setupSwagger(app);
 app.use("/auth", authLimiter, authRouter);
 app.use("/api", generalLimiter, authCheck, mainRouter);
 app.use(globalErrorHandler);

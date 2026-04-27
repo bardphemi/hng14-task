@@ -46,6 +46,19 @@ describe("integration: app", () => {
     expect(res.body).toEqual({ message: "API is healthy" });
   });
 
+  it("GET /docs.json returns OpenAPI spec", async () => {
+    const res = await request(app).get("/docs.json");
+    expect(res.status).toBe(httpStatus.OK);
+    expect(res.body).toEqual(
+      expect.objectContaining({
+        openapi: "3.0.3",
+        info: expect.objectContaining({
+          title: "hng14-stg0-task API",
+        }),
+      })
+    );
+  });
+
   it("GET /api/classify requires authorization", async () => {
     const res = await request(app).get("/api/classify").query({ name: "anna" });
     expect(res.status).toBe(httpStatus.UNAUTHORIZED);

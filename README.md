@@ -8,6 +8,8 @@ TypeScript + Express API for:
 
 ## Current Features
 - `GET /health` health check route (public)
+- `GET /docs` Swagger UI (public)
+- `GET /docs.json` OpenAPI JSON spec (public)
 - `GET /auth/github` GitHub OAuth redirect (public)
 - `GET /auth/github/callback` completes OAuth and returns tokens (public)
 - `POST /auth/refresh` rotates refresh token and returns new access/refresh tokens (public)
@@ -109,6 +111,8 @@ Base URL: `http://localhost:<PORT>`
 
 ### Public
 - `GET /health`
+- `GET /docs`
+- `GET /docs.json`
 - `GET /auth/github`
 - `GET /auth/github/callback?code=...`
 - `POST /auth/refresh`
