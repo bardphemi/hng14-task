@@ -27,20 +27,38 @@ export const sendResponse = (
     page?: number;
     limit?: number;
     total?: number;
+    baseUrl?: string;
+  },
+  options?: {
+    flat?: boolean;
   }
 ) => {
   const response: any = {
     status: "success",
-    data,
   };
+
+  if (options?.flat && data && typeof data === "object") {
+    Object.assign(response, data);
+  } else {
+    response.data = data;
+  }
+
   if (message) {
     response.message = message;
   }
+
   if (pagination) {
-    const { page, limit, total } = pagination;
-    if (page !== undefined) response.page = page;
-    if (limit !== undefined) response.limit = limit;
-    if (total !== undefined) response.total = total;
+    const { page = 1, limit = 10, total = 0, baseUrl = "" } = pagination;
+    const totalPages = Math.ceil(total / limit);
+    response.page = page;
+    response.limit = limit;
+    response.total = total;
+    response.total_pages = totalPages;
+    response.links = {
+      self: `${baseUrl}?page=${page}&limit=${limit}`,
+      next: page < totalPages ? `${baseUrl}?page=${page + 1}&limit=${limit}` : null,
+      prev: page > 1 ? `${baseUrl}?page=${page - 1}&limit=${limit}` : null,
+    };
   }
 
   return res.status(statusCode).send(response);

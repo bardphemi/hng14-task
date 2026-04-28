@@ -73,6 +73,8 @@ export const COUNTRY_MAP: Record<string, string> = {
   philippines: "PH",
   vietnam: "VN",
   pakistan: "PK"
-}
+};
+export const ACCESS_TOKEN_EXP="3m";
+export const REFRESH_TOKEN_EXP="5m";
 
 

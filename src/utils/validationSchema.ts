@@ -104,6 +104,11 @@ export const fetchProfilesQuerySchema = Joi.object({
     "any.invalid": "{{#message}}",
   });
 
+  // valdiates referesh token payload
+export const refreshTokenSchema = Joi.object({
+  refresh_token: Joi.string().required().trim()
+})
+
 // validates search strings
 export const searchProfilesQuerySchema = Joi.object({
   q: Joi.string()
@@ -124,4 +129,15 @@ export const searchProfilesQuerySchema = Joi.object({
     .min(1)
     .max(50)
     .default(10),
+});
+
+// validates exporting profiles
+export const exportProfilesQuerySchema = fetchProfilesQuerySchema.keys({
+  format: Joi.string()
+    .valid("csv", "xlsx")
+    .required()
+    .messages({
+      "any.only": "format must be one of csv, or xlsx",
+      "any.required": "format is required for export",
+    }),
 });

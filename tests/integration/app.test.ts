@@ -2,6 +2,7 @@
 import request from "supertest";
 import nock from "nock";
 import httpStatus from "http-status";
+import jwt from "jsonwebtoken";
 
 jest.mock("../../src/modules/profile/profile.service", () => ({
   __esModule: true,
@@ -17,9 +18,23 @@ import app from "../../src/app";
 import profileService from "../../src/modules/profile/profile.service";
 
 const BASE_URL = process.env.GENDERIZE_URL || "https://api.genderize.io";
+const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET as string;
+
+const signAccessToken = (role: "admin" | "analyst" = "analyst") =>
+  jwt.sign(
+    {
+      userId: "user-test-id",
+      role,
+      roleId: "role-test-id",
+    },
+    JWT_ACCESS_SECRET
+  );
 
 // 
 describe("integration: app", () => {
+  const analystToken = signAccessToken("analyst");
+  const adminToken = signAccessToken("admin");
+
   afterEach(() => {
     nock.cleanAll();
     jest.clearAllMocks();
@@ -29,6 +44,18 @@ describe("integration: app", () => {
     const res = await request(app).get("/health");
     expect(res.status).toBe(httpStatus.OK);
     expect(res.body).toEqual({ message: "API is healthy" });
+  });
+
+  it("GET /api/classify requires authorization", async () => {
+    const res = await request(app)
+      .get("/api/classify")
+      .set("x-api-version", "1")
+      .query({ name: "anna" });
+    expect(res.status).toBe(httpStatus.UNAUTHORIZED);
+    expect(res.body).toEqual({
+      status: "error",
+      message: "Invalid or expired token",
+    });
   });
 
   it("GET /api/classify returns prediction", async () => {
@@ -41,7 +68,11 @@ describe("integration: app", () => {
         probability: 0.9,
         count: 200,
       });
-    const res = await request(app).get("/api/classify").query({ name: "anna" });
+    const res = await request(app)
+      .get("/api/classify")
+      .set("x-api-version", "1")
+      .set("Authorization", `Bearer ${analystToken}`)
+      .query({ name: "anna" });
     expect(res.status).toBe(httpStatus.OK);
     expect(res.body.status).toBe("success");
     expect(res.body.data).toMatchObject({
@@ -56,7 +87,10 @@ describe("integration: app", () => {
   });
 
   it("GET /api/classify validates missing name", async () => {
-    const res = await request(app).get("/api/classify");
+    const res = await request(app)
+      .get("/api/classify")
+      .set("x-api-version", "1")
+      .set("Authorization", `Bearer ${analystToken}`);
     expect(res.status).toBe(httpStatus.BAD_REQUEST);
     expect(res.body).toEqual({
       status: "error",
@@ -65,7 +99,11 @@ describe("integration: app", () => {
   });
 
   it("GET /api/classify validates numeric name", async () => {
-    const res = await request(app).get("/api/classify").query({ name: "123" });
+    const res = await request(app)
+      .get("/api/classify")
+      .set("x-api-version", "1")
+      .set("Authorization", `Bearer ${analystToken}`)
+      .query({ name: "123" });
     expect(res.status).toBe(httpStatus.UNPROCESSABLE_ENTITY);
     expect(res.body).toEqual({
       status: "error",
@@ -88,13 +126,17 @@ describe("integration: app", () => {
       created_at: "2026-04-15T01:00:00.000Z",
     });
 
-    const res = await request(app).post("/api/profiles").send({ name: "  ANNA " });
+    const res = await request(app)
+      .post("/api/profiles")
+      .set("x-api-version", "1")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ name: "  ANNA " });
 
     expect(res.status).toBe(httpStatus.CREATED);
     expect(profileService.fetchProfileByName).toHaveBeenCalledWith("anna");
     expect(profileService.createProfile).toHaveBeenCalledWith("anna");
     expect(res.body.status).toBe("success");
-    expect(res.body.message).toBe("Profile created successfully");
+    expect(res.body.message).toBe(undefined);
     expect(res.body.data).toMatchObject({
       id: "f7e5f6af-6f22-4c2b-9f0e-46cd935b0082",
       name: "anna",
@@ -123,6 +165,8 @@ describe("integration: app", () => {
 
     const res = await request(app)
       .get("/api/profiles")
+      .set("x-api-version", "1")
+      .set("Authorization", `Bearer ${analystToken}`)
       .query({
         gender: "female",
         country_id: "ng",
@@ -146,7 +190,7 @@ describe("integration: app", () => {
       })
     );
     expect(res.body.status).toBe("success");
-    expect(res.body.message).toBe("Profiles fetched successfully");
+    expect(res.body.message).toBe(undefined);
     expect(res.body.total).toBe(1);
     expect(res.body.page).toBe(2);
     expect(res.body.limit).toBe(1);
@@ -156,12 +200,14 @@ describe("integration: app", () => {
   it("GET /api/profiles returns validation error when min_age is greater than max_age", async () => {
     const res = await request(app)
       .get("/api/profiles")
+      .set("x-api-version", "1")
+      .set("Authorization", `Bearer ${analystToken}`)
       .query({ min_age: "30", max_age: "20" });
 
     expect(res.status).toBe(httpStatus.BAD_REQUEST);
-    expect(res.body).toEqual({
+    expect(res.body).toMatchObject({
       status: "error",
-      message: "Invalid query parameters",
+      message: expect.stringContaining("min_age cannot be greater than max_age"),
     });
     expect(profileService.fetchProfiles).not.toHaveBeenCalled();
   });
@@ -185,6 +231,8 @@ describe("integration: app", () => {
 
     const res = await request(app)
       .get("/api/profiles/search")
+      .set("x-api-version", "1")
+      .set("Authorization", `Bearer ${analystToken}`)
       .query({
         q: "female adults in nigeria above 21",
         page: "2",
@@ -201,7 +249,7 @@ describe("integration: app", () => {
       limit: 1,
     });
     expect(res.body.status).toBe("success");
-    expect(res.body.message).toBe("Profiles fetched successfully");
+    expect(res.body.message).toBe(undefined);
     expect(res.body.total).toBe(1);
     expect(res.body.page).toBe(2);
     expect(res.body.limit).toBe(1);
@@ -211,12 +259,14 @@ describe("integration: app", () => {
   it("GET /api/profiles/search validates malformed query params", async () => {
     const res = await request(app)
       .get("/api/profiles/search")
+      .set("x-api-version", "1")
+      .set("Authorization", `Bearer ${analystToken}`)
       .query({ q: "ab" });
 
     expect(res.status).toBe(httpStatus.BAD_REQUEST);
-    expect(res.body).toEqual({
+    expect(res.body).toMatchObject({
       status: "error",
-      message: "Invalid query parameters",
+      message: expect.stringContaining("Search query must be at least 3 characters"),
     });
     expect(profileService.fetchProfiles).not.toHaveBeenCalled();
   });
@@ -224,6 +274,8 @@ describe("integration: app", () => {
   it("GET /api/profiles/search returns bad request when query cannot be interpreted", async () => {
     const res = await request(app)
       .get("/api/profiles/search")
+      .set("x-api-version", "1")
+      .set("Authorization", `Bearer ${analystToken}`)
       .query({ q: "lorem ipsum" });
 
     expect(res.status).toBe(httpStatus.BAD_REQUEST);

@@ -1,8 +1,9 @@
 // third-party libraries
 import httpStatus from "http-status";
 import { randomUUID } from "node:crypto";
-
-
+import { stringify } from "csv-stringify";
+import ExcelJS from "exceljs";
+import { PassThrough } from "stream";
 
 // data access object
 import profileDao from "./profile.dao";
@@ -11,7 +12,14 @@ import profileDao from "./profile.dao";
 import classifyService from "../classify/classify.service";
 
 // interface
-import { AgeGroup, AgifyResponse, FetchProfilesParams, NationalityResponse, ProfileInsert } from "./profile.interface";
+import {
+  AgeGroup,
+  AgifyResponse,
+  ExportProfileResult,
+  FetchProfilesParams,
+  NationalityResponse,
+  ProfileInsert
+} from "./profile.interface";
 
 // utils import
 import { axiosInstance } from "../../utils/axiosUtil";
@@ -207,7 +215,110 @@ const profileService = {
    */
   async bulkInsert(profiles: ProfileInsert[]) {
     return await profileDao.bulkInsert(profiles);
+  },
+
+  /**
+   * @description handles fetching and parsing data
+   * @param query 
+   * @param res 
+   * @returns 
+   */
+  async exportProfile(
+    query: FetchProfilesParams,
+  ): Promise<ExportProfileResult> {
+    const stream = new PassThrough();
+    const { format, ...filters } = query;
+    const dbStream = await profileDao.streamProfilesForExport(filters);
+
+    switch (format) {
+      // csv export
+      case "csv": {
+        const csvStream = stringify({
+          header: true,
+          columns: [
+            "id",
+            "name",
+            "gender",
+            "gender_probability",
+            "age",
+            "age_group",
+            "country_id",
+            "country_name",
+            "country_probability",
+            "created_at",
+          ],
+        });
+        return {
+          type: "csv-stream",
+          filename: `profiles_${new Date().toISOString()}.csv`,
+          contentType: "text/csv",
+          dbStream,
+          transformStream: csvStream
+        };
+      }
+
+      // export to excel
+      case "xlsx": {
+        const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+          stream,
+          useStyles: true,
+          useSharedStrings: true,
+        });
+        const worksheet = workbook.addWorksheet("Profiles");
+
+        worksheet.addRow([
+          "ID",
+          "Name",
+          "Gender",
+          "Gender Probability",
+          "Age",
+          "Age Group",
+          "Country ID",
+          "Country Name",
+          "Country Probability",
+          "Created At",
+        ]).commit();
+
+        dbStream.on("data", (row: any) => {
+          worksheet.addRow([
+            row.id,
+            row.name,
+            row.gender,
+            row.gender_probability,
+            row.age,
+            row.age_group,
+            row.country_id,
+            row.country_name,
+            row.country_probability,
+            row.created_at,
+          ]).commit();
+        });
+        dbStream.on("end", async () => {
+          await workbook.commit();
+        });
+        dbStream.on("error", async (err: any) => {
+          stream.destroy(err);
+        });
+
+        return {
+          type: "excel-stream",
+          filename: `profiles_${new Date().toISOString()}.xlsx`,
+          contentType:
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          stream
+        };
+      }
+
+      // unknown file type handler
+      default: {
+        throw new AppError(
+          "Unsupported format",
+          httpStatus.UNSUPPORTED_MEDIA_TYPE
+        );
+      }
+    }
   }
 }
+
 
 export default profileService;
