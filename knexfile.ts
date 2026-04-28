@@ -18,6 +18,16 @@ const dbConfig: { [key: string]: Knex.Config } = {
       directory: "./src/database/seeds"
     }
   },
+  test: {
+    client: "pg",
+    connection: DATABASE_URL,
+    migrations: {
+      directory: "./src/database/migrations"
+    },
+    seeds: {
+      directory: "./src/database/seeds"
+    }
+  },
   production: {
     client: "pg",
     connection: {
