@@ -3,7 +3,12 @@ import { Router } from "express";
 
 // controller
 import userCtrl from "./user.controller";
+
+// utils import 
 import { asyncHandler } from "../../utils/asyncHandler";
+
+// middleware
+import { adminCheck } from "../../middlewares/handleAccess";
 
 // router
 const userRouter = Router();
@@ -11,6 +16,6 @@ const userRouter = Router();
 // routes
 userRouter
   .route("/")
-  .get(asyncHandler(userCtrl.fetchUsers))
+  .get(adminCheck, asyncHandler(userCtrl.fetchUsers))
 
 export default userRouter;
