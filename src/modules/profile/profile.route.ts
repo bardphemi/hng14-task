@@ -11,7 +11,7 @@ import { adminCheck } from "../../middlewares/handleAccess";
 // utils import
 import { asyncHandler } from "../../utils/asyncHandler";
 import { upload } from "../../utils/uploadUtil";
-import { fetchProfilesQuerySchema, searchProfilesQuerySchema } from "../../utils/validationSchema";
+import { exportProfilesQuerySchema, fetchProfilesQuerySchema, searchProfilesQuerySchema } from "../../utils/validationSchema";
 
 // router
 const profileRouter = Router();
@@ -26,6 +26,10 @@ profileRouter.get("/search",
   validator({ query: searchProfilesQuerySchema }),
   asyncHandler(profileCtrl.searchProfile)
 )
+profileRouter.get(
+  "/export",
+  validator({ query: exportProfilesQuerySchema }),
+  asyncHandler(profileCtrl.exportProfiles));
 profileRouter
   .route("/")
   .get(

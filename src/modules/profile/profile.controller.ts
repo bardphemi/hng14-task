@@ -2,6 +2,8 @@
 import { Request, Response } from "express";
 import httpStatus from "http-status";
 import fs from "fs";
+import { pipeline } from "stream";
+import { promisify } from "util";
 
 // middleware
 import { sendResponse } from "../../middlewares/responseHandler";
@@ -45,9 +47,13 @@ const profileCtrl = {
     return sendResponse(
       res,
       httpStatus.OK,
-      "Profiles fetched successfully",
+      undefined,
       data,
-      { total, page: Number(page), limit: Number(limit) },
+      {
+        total, page: Number(page),
+        limit: Number(limit),
+        baseUrl: req.baseUrl + req.path,
+      },
     );
   },
 
@@ -88,7 +94,7 @@ const profileCtrl = {
     return sendResponse(
       res,
       httpStatus.CREATED,
-      "Profile created successfully",
+      undefined,
       profile
     )
   },
@@ -212,11 +218,62 @@ const profileCtrl = {
     return sendResponse(
       res,
       httpStatus.OK,
-      "Profiles fetched successfully",
+      undefined,
       data,
-      { total, page: Number(page), limit: Number(limit) },
+      {
+        total, page: Number(page),
+        limit: Number(limit),
+        baseUrl: req.baseUrl + req.path,
+      },
     );
+  },
+
+  /**
+   * @description handles data export
+   * @param req 
+   * @param res 
+   * @returns 
+   */
+  async exportProfiles(req: Request, res: Response): Promise<Response | void> {
+    // @ts-expect-error 
+    const { query } = req.validated;
+    const profileData = await profileService.exportProfile(query);
+    const pipe = promisify(pipeline);
+    res.setHeader("Content-Type", profileData.contentType);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=${profileData.filename}`
+    );
+    try {
+      // csv handler
+      if (profileData.type === "csv-stream") {
+        await pipe(
+          profileData.dbStream,
+          profileData.transformStream,
+          res
+        );
+        return;
+      }
+
+      // excel handler
+      if (profileData.type === "excel-stream") {
+        await pipe(
+          profileData.stream,
+          res
+        );
+        return;
+      }
+      return;
+    } catch (err) {
+      logger.error(`Export failed: ${err}`);
+      if (!res.headersSent) {
+        res
+          .status(httpStatus.INTERNAL_SERVER_ERROR)
+          .end("Export failed");
+        return;
+      }
+    }
   }
-};
+}
 
 export default profileCtrl;

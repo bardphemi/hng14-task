@@ -9,7 +9,7 @@ import { FetchProfilesParams, ProfileDTO, ProfileInsert } from "./profile.interf
 
 // utils import
 import { AppError } from "../../utils/appError";
-import { FETCH_LIMIT } from "../../utils/constants";
+import logger from "../../utils/logger";
 
 // profile data access object
 const profileDao = {
@@ -101,6 +101,7 @@ const profileDao = {
         "age",
         "age_group",
         "country_id",
+        "country_name",
         "country_probability",
         "created_at",
       ).first();
@@ -124,7 +125,7 @@ const profileDao = {
           ...payload,
           created_at: db.fn.now(),
         })
-        .onConflict("name")
+        .onConflict(["name", "age", "country_id"])
         .merge()
         .returning([
           "id",
@@ -135,6 +136,7 @@ const profileDao = {
           "age",
           "age_group",
           "country_id",
+          "country_name",
           "country_probability",
           "created_at",
         ]);
@@ -223,7 +225,64 @@ const profileDao = {
         httpStatus.INTERNAL_SERVER_ERROR
       );
     }
-  }
+  },
+
+  /**
+   * @description streams data for export
+   * @param query 
+   * @returns 
+   */
+  async streamProfilesForExport(query: FetchProfilesParams) {
+    try {
+      const {
+        gender,
+        country_id,
+        age_group,
+        min_age,
+        max_age,
+        min_country_probability,
+        min_gender_probability,
+        sort_by = "created_at",
+        order = "desc",
+      } = query;
+      const baseQuery = db("profiles").modify((qb) => {
+        if (gender) qb.where("gender", gender);
+        if (country_id) qb.where("country_id", country_id);
+        if (age_group) qb.where("age_group", age_group);
+        if (min_age !== undefined) qb.where("age", ">=", min_age);
+        if (max_age !== undefined) qb.where("age", "<=", max_age);
+        if (min_country_probability !== undefined) {
+          qb.where("country_probability", ">=", min_country_probability);
+        }
+        if (min_gender_probability !== undefined) {
+          qb.where("gender_probability", ">=", min_gender_probability);
+        }
+      });
+      const queryBuilder = baseQuery
+        .clone()
+        .select(
+          "id",
+          "name",
+          "gender",
+          "gender_probability",
+          "age",
+          "age_group",
+          "country_id",
+          "country_name",
+          "country_probability",
+          "created_at"
+        )
+        .orderBy(sort_by, order);
+      return queryBuilder.stream();
+    } catch (error) {
+      const errMessage = error instanceof Error ? error.message : String(error)
+      logger.error(`[streamProfilesForExport] Error streaming profile data for export: ${errMessage}`)
+      throw new AppError(
+        errMessage,
+        httpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  },
 };
 
 export default profileDao;

@@ -130,3 +130,14 @@ export const searchProfilesQuerySchema = Joi.object({
     .max(50)
     .default(10),
 });
+
+// validates exporting profiles
+export const exportProfilesQuerySchema = fetchProfilesQuerySchema.keys({
+  format: Joi.string()
+    .valid("csv", "xlsx")
+    .required()
+    .messages({
+      "any.only": "format must be one of csv, or xlsx",
+      "any.required": "format is required for export",
+    }),
+});

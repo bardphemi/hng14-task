@@ -1,3 +1,5 @@
+import { Readable } from "stream";
+
 export interface FetchProfilesParams {
   gender?: string | any;
   ageGroup?: string | any;
@@ -11,6 +13,7 @@ export interface FetchProfilesParams {
   order?: string;
   page?: number;
   limit?: number;
+  format?: string;
 };
 
 export interface AgifyResponse {
@@ -58,4 +61,23 @@ export interface ProfileInsert {
   country_name: string;
   country_probability: number;
 }
+
+
+
+interface CsvStreamResult {
+  type: "csv-stream";
+  filename: string;
+  contentType: string;
+  dbStream: Readable;
+  transformStream: Readable | any;
+}
+
+interface ExcelStreamResult {
+  type: "excel-stream";
+  filename: string;
+  contentType: string;
+  stream: Readable;
+}
+
+export type ExportProfileResult = CsvStreamResult | ExcelStreamResult;
 

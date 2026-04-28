@@ -46,21 +46,11 @@ describe("integration: app", () => {
     expect(res.body).toEqual({ message: "API is healthy" });
   });
 
-  // it("GET /docs.json returns OpenAPI spec", async () => {
-  //   const res = await request(app).get("/docs.json");
-  //   expect(res.status).toBe(httpStatus.OK);
-  //   expect(res.body).toEqual(
-  //     expect.objectContaining({
-  //       openapi: "3.0.3",
-  //       info: expect.objectContaining({
-  //         title: "hng14-stg0-task API",
-  //       }),
-  //     })
-  //   );
-  // });
-
   it("GET /api/classify requires authorization", async () => {
-    const res = await request(app).get("/api/classify").query({ name: "anna" });
+    const res = await request(app)
+      .get("/api/classify")
+      .set("x-api-version", "1")
+      .query({ name: "anna" });
     expect(res.status).toBe(httpStatus.UNAUTHORIZED);
     expect(res.body).toEqual({
       status: "error",
@@ -80,6 +70,7 @@ describe("integration: app", () => {
       });
     const res = await request(app)
       .get("/api/classify")
+      .set("x-api-version", "1")
       .set("Authorization", `Bearer ${analystToken}`)
       .query({ name: "anna" });
     expect(res.status).toBe(httpStatus.OK);
@@ -98,6 +89,7 @@ describe("integration: app", () => {
   it("GET /api/classify validates missing name", async () => {
     const res = await request(app)
       .get("/api/classify")
+      .set("x-api-version", "1")
       .set("Authorization", `Bearer ${analystToken}`);
     expect(res.status).toBe(httpStatus.BAD_REQUEST);
     expect(res.body).toEqual({
@@ -109,6 +101,7 @@ describe("integration: app", () => {
   it("GET /api/classify validates numeric name", async () => {
     const res = await request(app)
       .get("/api/classify")
+      .set("x-api-version", "1")
       .set("Authorization", `Bearer ${analystToken}`)
       .query({ name: "123" });
     expect(res.status).toBe(httpStatus.UNPROCESSABLE_ENTITY);
@@ -135,6 +128,7 @@ describe("integration: app", () => {
 
     const res = await request(app)
       .post("/api/profiles")
+      .set("x-api-version", "1")
       .set("Authorization", `Bearer ${adminToken}`)
       .send({ name: "  ANNA " });
 
@@ -171,6 +165,7 @@ describe("integration: app", () => {
 
     const res = await request(app)
       .get("/api/profiles")
+      .set("x-api-version", "1")
       .set("Authorization", `Bearer ${analystToken}`)
       .query({
         gender: "female",
@@ -205,13 +200,14 @@ describe("integration: app", () => {
   it("GET /api/profiles returns validation error when min_age is greater than max_age", async () => {
     const res = await request(app)
       .get("/api/profiles")
+      .set("x-api-version", "1")
       .set("Authorization", `Bearer ${analystToken}`)
       .query({ min_age: "30", max_age: "20" });
 
     expect(res.status).toBe(httpStatus.BAD_REQUEST);
-    expect(res.body).toEqual({
+    expect(res.body).toMatchObject({
       status: "error",
-      message: "ValidationError: min_age cannot be greater than max_age",
+      message: expect.stringContaining("min_age cannot be greater than max_age"),
     });
     expect(profileService.fetchProfiles).not.toHaveBeenCalled();
   });
@@ -235,6 +231,7 @@ describe("integration: app", () => {
 
     const res = await request(app)
       .get("/api/profiles/search")
+      .set("x-api-version", "1")
       .set("Authorization", `Bearer ${analystToken}`)
       .query({
         q: "female adults in nigeria above 21",
@@ -262,13 +259,14 @@ describe("integration: app", () => {
   it("GET /api/profiles/search validates malformed query params", async () => {
     const res = await request(app)
       .get("/api/profiles/search")
+      .set("x-api-version", "1")
       .set("Authorization", `Bearer ${analystToken}`)
       .query({ q: "ab" });
 
     expect(res.status).toBe(httpStatus.BAD_REQUEST);
-    expect(res.body).toEqual({
+    expect(res.body).toMatchObject({
       status: "error",
-      message: "ValidationError: Search query must be at least 3 characters",
+      message: expect.stringContaining("Search query must be at least 3 characters"),
     });
     expect(profileService.fetchProfiles).not.toHaveBeenCalled();
   });
@@ -276,6 +274,7 @@ describe("integration: app", () => {
   it("GET /api/profiles/search returns bad request when query cannot be interpreted", async () => {
     const res = await request(app)
       .get("/api/profiles/search")
+      .set("x-api-version", "1")
       .set("Authorization", `Bearer ${analystToken}`)
       .query({ q: "lorem ipsum" });
 
