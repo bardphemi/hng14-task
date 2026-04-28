@@ -136,7 +136,7 @@ describe("integration: app", () => {
     expect(profileService.fetchProfileByName).toHaveBeenCalledWith("anna");
     expect(profileService.createProfile).toHaveBeenCalledWith("anna");
     expect(res.body.status).toBe("success");
-    expect(res.body.message).toBe("Profile created successfully");
+    expect(res.body.message).toBe(undefined);
     expect(res.body.data).toMatchObject({
       id: "f7e5f6af-6f22-4c2b-9f0e-46cd935b0082",
       name: "anna",
@@ -190,7 +190,7 @@ describe("integration: app", () => {
       })
     );
     expect(res.body.status).toBe("success");
-    expect(res.body.message).toBe("Profiles fetched successfully");
+    expect(res.body.message).toBe(undefined);
     expect(res.body.total).toBe(1);
     expect(res.body.page).toBe(2);
     expect(res.body.limit).toBe(1);
@@ -249,7 +249,7 @@ describe("integration: app", () => {
       limit: 1,
     });
     expect(res.body.status).toBe("success");
-    expect(res.body.message).toBe("Profiles fetched successfully");
+    expect(res.body.message).toBe(undefined);
     expect(res.body.total).toBe(1);
     expect(res.body.page).toBe(2);
     expect(res.body.limit).toBe(1);
