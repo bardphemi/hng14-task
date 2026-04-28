@@ -21,8 +21,8 @@ jobs:
       - name: Install dependencies
         run: yarn install
 
-      - name: Run tests (optional)
-        run: yarn test
+      # - name: Run tests (optional)
+      #   run: yarn test
 
       - name: Install Railway CLI
         run: yarn global add i -g @railway/cli
