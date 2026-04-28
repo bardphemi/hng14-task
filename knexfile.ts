@@ -1,12 +1,12 @@
 // third-party libraries
 import type { Knex } from "knex";
 import dotenv from "dotenv";
+dotenv.config();
 
 // system variables
 const { DATABASE_URL, DEV_DATABASE_URL } = process.env;
 
 // config
-dotenv.config();
 const dbConfig: { [key: string]: Knex.Config } = {
   development: {
     client: "pg",
