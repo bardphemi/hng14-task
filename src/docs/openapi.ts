@@ -1,9 +1,9 @@
-const port = process.env.PORT
+const port = process.env.PORT || "3000";
 
 export const openApiSpec = {
   openapi: "3.0.3",
   info: {
-    title: "hng14 API",
+    title: "hng14-stg0-task API",
     version: "1.0.0",
     description:
       "API for gender classification, profile enrichment, profile search/filtering, and GitHub OAuth authentication.",
@@ -27,6 +27,12 @@ export const openApiSpec = {
         type: "http",
         scheme: "bearer",
         bearerFormat: "JWT",
+      },
+      apiVersionHeader: {
+        type: "apiKey",
+        in: "header",
+        name: "x-api-version",
+        description: "Required for profile endpoints. Current supported version is `1`.",
       },
     },
     schemas: {
@@ -224,17 +230,17 @@ export const openApiSpec = {
       get: {
         tags: ["Profiles"],
         summary: "Fetch profiles with filters",
-        security: [{ bearerAuth: [] }],
+        security: [{ bearerAuth: [] }, { apiVersionHeader: [] }],
         responses: {
           "200": { description: "Profiles fetched successfully" },
-          "400": { description: "Validation error" },
+          "400": { description: "Validation error / missing or unsupported API version" },
           "401": { description: "Unauthorized" },
         },
       },
       post: {
         tags: ["Profiles"],
         summary: "Create a profile (admin only)",
-        security: [{ bearerAuth: [] }],
+        security: [{ bearerAuth: [] }, { apiVersionHeader: [] }],
         requestBody: {
           required: true,
           content: {
@@ -246,6 +252,7 @@ export const openApiSpec = {
         responses: {
           "201": { description: "Profile created successfully" },
           "200": { description: "Profile already exists" },
+          "400": { description: "Missing or unsupported API version" },
           "401": { description: "Unauthorized" },
           "403": { description: "Forbidden: Admins only" },
         },
@@ -255,7 +262,7 @@ export const openApiSpec = {
       post: {
         tags: ["Profiles"],
         summary: "Bulk upload profiles using multipart file",
-        security: [{ bearerAuth: [] }],
+        security: [{ bearerAuth: [] }, { apiVersionHeader: [] }],
         requestBody: {
           required: true,
           content: {
@@ -275,7 +282,7 @@ export const openApiSpec = {
         },
         responses: {
           "201": { description: "Profiles uploaded successfully" },
-          "400": { description: "No file uploaded / validation error" },
+          "400": { description: "No file uploaded / validation error / missing or unsupported API version" },
           "401": { description: "Unauthorized" },
         },
       },
@@ -284,7 +291,7 @@ export const openApiSpec = {
       get: {
         tags: ["Profiles"],
         summary: "Search profiles using natural language query",
-        security: [{ bearerAuth: [] }],
+        security: [{ bearerAuth: [] }, { apiVersionHeader: [] }],
         parameters: [
           {
             in: "query",
@@ -307,7 +314,7 @@ export const openApiSpec = {
         ],
         responses: {
           "200": { description: "Profiles fetched successfully" },
-          "400": { description: "Invalid query / unable to interpret query" },
+          "400": { description: "Invalid query / unable to interpret query / missing or unsupported API version" },
           "401": { description: "Unauthorized" },
         },
       },
@@ -316,7 +323,7 @@ export const openApiSpec = {
       get: {
         tags: ["Profiles"],
         summary: "Fetch profile by id",
-        security: [{ bearerAuth: [] }],
+        security: [{ bearerAuth: [] }, { apiVersionHeader: [] }],
         parameters: [
           {
             in: "path",
@@ -327,6 +334,7 @@ export const openApiSpec = {
         ],
         responses: {
           "200": { description: "Profile fetched successfully" },
+          "400": { description: "Missing or unsupported API version / invalid id format" },
           "401": { description: "Unauthorized" },
           "404": { description: "Profile not found" },
         },
@@ -334,7 +342,7 @@ export const openApiSpec = {
       delete: {
         tags: ["Profiles"],
         summary: "Delete profile by id",
-        security: [{ bearerAuth: [] }],
+        security: [{ bearerAuth: [] }, { apiVersionHeader: [] }],
         parameters: [
           {
             in: "path",
@@ -345,6 +353,7 @@ export const openApiSpec = {
         ],
         responses: {
           "204": { description: "Profile deleted" },
+          "400": { description: "Missing or unsupported API version / invalid id format" },
           "401": { description: "Unauthorized" },
           "404": { description: "Profile not found" },
         },
@@ -363,4 +372,3 @@ export const openApiSpec = {
     },
   },
 };
-
