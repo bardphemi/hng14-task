@@ -30,6 +30,7 @@ TypeScript + Express API for:
 - All `/api/*` routes require `Authorization: Bearer <access_token>`.
 - `POST /api/profiles` requires an `admin` role.
 - `/auth/*` routes are not behind `authCheck`.
+- All `/api/profiles*` routes also require `x-api-version: 1`.
 
 ## Stack
 - Node.js + TypeScript
@@ -132,6 +133,12 @@ Authorization: Bearer <access_token>
 - `DELETE /api/profiles/:id`
 - `POST /api/profiles/upload`
 - `GET /api/users`
+
+Profile routes also require:
+
+```http
+x-api-version: 1
+```
 
 ### Admin-only
 - `POST /api/profiles`
